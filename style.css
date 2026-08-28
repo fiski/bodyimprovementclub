@@ -52,15 +52,21 @@
    whole poster always fits on screen: no scrolling, and therefore no scrollbar
    for 100vw to over-report (which otherwise causes a few px of horizontal
    overflow whenever the scaled canvas grows taller than the viewport).
-   Capped at 1.25 so it does not balloon on the widest phones.
+   Capped at 1.6 so it does not balloon on the widest phones.
    The svh line is a progressive upgrade for mobile browser chrome.
 
-   Height divisor is 832, not the canvas 1024: the phone composition's content
-   ends at y=792, so the last 232px of the Figma frame is empty background.
-   832 = 792 + a 40px bottom margin, which keeps the poster near 1:1 on a
-   typical phone instead of shrinking it to fit space nothing occupies. Where
-   this divisor is the binding one the stage fills the height exactly, so it
-   is a zoom control, not a placement one — vertical placement is .stage's
+   NEITHER divisor is the raw canvas — both are the INKED extent plus a margin,
+   so the poster is sized to what is actually drawn rather than to the empty
+   background around it. The phone composition inks x 10..380 (the brush
+   borders start 2px outside the 12px gutter) and y 64..793:
+
+     width  380 = 370 + 10  → a 5px side margin; the 390-wide stage bleeds
+                              10px of empty gutter off-screen, which body's
+                              overflow: hidden absorbs.
+     height 765 = 729 + 36  → an 18px margin top and bottom.
+
+   Where a divisor is the binding one the drawing fills that axis exactly, so
+   these are zoom controls, not placement ones — vertical placement is .stage's
    lift.
 
    svh, not vh/dvh: svh is the SMALL viewport — the height that remains with the
@@ -69,8 +75,8 @@
    chrome collapses. (vh is the LARGE viewport, which is what made the body
    taller than the visible area and left a strip of empty ground to scroll.) */
 html {
-  font-size: min(1.25px, calc(100vw / 390), calc(100vh / 832));
-  font-size: min(1.25px, calc(100vw / 390), calc(100svh / 832));
+  font-size: min(1.6px, calc(100vw / 380), calc(100vh / 765));
+  font-size: min(1.6px, calc(100vw / 380), calc(100svh / 765));
   background: var(--ground);
 }
 
@@ -82,7 +88,11 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--ground);
-  overflow-x: hidden;
+  /* Both axes: the poster is sized to fit by construction, so nothing here is
+     ever meant to scroll. Horizontally this clips the phone canvas's bled
+     gutters; vertically it clips the 28px of empty layout overflow the phone
+     composition leaves below .stage's shortened box (see .stage). */
+  overflow: hidden;
 }
 
 /* ---------- film grain -------------------------------------------------- */
@@ -102,19 +112,26 @@ body {
 }
 
 /* ---------- stage ------------------------------------------------------- */
-/* The lift sits the poster slightly high rather than dead-centre. Centring an
-   832-tall canvas whose content runs 66..792 leaves 66 above and 40 below;
-   translating the whole thing up 26 design px turns that into 40 above and 66
-   below. It is a transform, not an edit to the children's y offsets, so the
-   Figma coordinates below stay a faithful transcription — the composition is
-   moved as a unit, exactly as the poster is scaled as a unit. Transforms do not
-   affect layout, so this cannot reintroduce scrolling. */
+/* The box is the height that gets FITTED (see html), not the height of the
+   Figma frame: 765 = the inked extent 64..793 plus 18px of margin at each end.
+   The lift then slides the composition into that box — up 46, so the logo's
+   y=64 lands 18 below the top and the last brush stroke lands 18 above the
+   bottom. Fitting the drawing instead of the frame is what lets the poster
+   scale up: on a typical phone it is now within a few percent of 1:1 rather
+   than shrunk to make room for 100px of empty background.
+
+   It is a transform, not an edit to the children's y offsets, so the Figma
+   coordinates below stay a faithful transcription — the composition is moved
+   as a unit, exactly as the poster is scaled as a unit. The cost is that the
+   children (which still run to y=793) now overflow this 765 box by 28 before
+   the transform lifts them back inside; transforms do not affect layout, so
+   that residue would scroll if body did not clip it. */
 .stage {
   position: relative;
   flex: none;
   width: 390rem;
-  height: 832rem;      /* content 66..792 plus a 40px bottom margin — see html */
-  transform: translateY(-26rem);
+  height: 765rem;      /* fitted height — see html */
+  transform: translateY(-46rem);
   z-index: 1;
 }
 
@@ -140,7 +157,11 @@ body {
 .stage::before {
   content: "";
   position: absolute;
-  inset: 0;
+  /* Backgrounds do not paint outside their box, and the phone's lowest brush
+     layer ends at y=793 — past the shortened .stage — so this overlay is given
+     the full canvas height rather than inset: 0. Layer positions are measured
+     from the same origin either way. */
+  top: 0; left: 0; right: 0; height: 1024rem;
   z-index: 2;                 /* above the icons, as frame strokes are in Figma */
   pointer-events: none;
   background-repeat: no-repeat;
@@ -249,7 +270,7 @@ body {
    PHONE composition — Figma node 6:1847, 390x1024
    ========================================================================== */
 
-.logo { left: 12rem; top: 66rem; width: 366rem; height: 148rem; display: block; }
+.logo { left: 12rem; top: 64rem; width: 366rem; height: 148rem; display: block; }
 
 .box--title {
   left: 12rem; top: 214rem; width: 366rem; height: 171rem;
@@ -326,7 +347,7 @@ body {
   .d-only { display: block; }
   .m-only { display: none; }
 
-  .logo { left: 537rem; top: 138rem; width: 366rem; height: 148rem; }
+  .logo { left: 537rem; top: 129rem; width: 366rem; height: 148rem; }
 
   .i--diet { --x: 1046rem; --y: 218rem; width: 69rem; height: 66.95rem; }
 
