@@ -1,0 +1,347 @@
+/* ==========================================================================
+   Body Improvement Club — landing page
+   Figma: D5ycEapMBObSrYNVvvsyNV — desktop node 5:653 (1440x1024),
+                                   phone   node 6:1847 (390x1024)
+
+   Geometry is transcribed from the file's absolute child transforms, read via
+   the Plugin API — NOT from Figma's generated Tailwind, which offsets every
+   child of a stroked frame by half the stroke width.
+
+   Box strokes are BRUSH strokes (Figma's hand-drawn stroke style) — solid
+   #e30b19 at 100%, weight 4 on the title box, 1.85 on the icon strips, 1 on
+   the panel, all strokeAlign CENTER — but painted as a bundle of wobbling ink
+   lines rather than one clean rule. Neither Dev Mode nor the Plugin API
+   exposes the brush; both report a plain solid stroke, which is why the
+   earlier transcription drew flat rules and why sampling a render reads a
+   washed-out ~25% alpha (that is the gaps between bristles, not the colour).
+
+   No CSS border can draw this, so each stroked frame was exported from Figma
+   as a flattened outline path (assets/borders/*.svg) and is composited by
+   .stage::before. See that rule for how the layers are placed.
+
+   SCALING: both compositions are fixed-size posters, so rather than reflow
+   them, 1rem is defined as one design pixel and shrinks with the viewport.
+   The whole canvas scales as a unit and never overflows horizontally. Hairline
+   rules keep a real 1px floor so they stay crisp at reduced scale.
+   ========================================================================== */
+
+:root {
+  --ground:    #d8ccbc;  /* page background  */
+  --red:       #e30b19;  /* strokes, title   */
+  --box-fill:  #d3c7b7;  /* tagline box fill */
+  --ink:       #000000;  /* tagline type     */
+
+  /* Figma's 0.5px grid strokes resolve to a 1px line at 50% alpha (measured
+     off the export, which renders these correctly). */
+  --grid-line: rgba(201, 0, 0, 0.5);
+
+  /* The desktop tagline box is the one stroke still drawn by CSS — it was not
+     among the brush exports. Dial the alpha if it reads heavier than the
+     brushed lines around it. */
+  --stroke-alpha: 100%;
+  --stroke: color-mix(in srgb, var(--red) var(--stroke-alpha), transparent);
+
+  --font-display: "Bungee Shade", cursive;
+  --font-mono:    "Major Mono Display", monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ---------- fluid canvas unit: 1rem === 1 design px --------------------- */
+/* Phone canvas is 390x1024 design px. The scale is bounded by BOTH axes so the
+   whole poster always fits on screen: no scrolling, and therefore no scrollbar
+   for 100vw to over-report (which otherwise causes a few px of horizontal
+   overflow whenever the scaled canvas grows taller than the viewport).
+   Capped at 1.25 so it does not balloon on the widest phones.
+   The dvh line is a progressive upgrade for mobile browser chrome.
+
+   Height divisor is 858, not the canvas 1024: the phone composition's content
+   ends at y=792, so the last 232px of the Figma frame is empty background.
+   858 = 792 + a 66px bottom margin mirroring the 66px above the logo, which
+   keeps the poster near 1:1 on a typical phone instead of shrinking it to fit
+   space nothing occupies. */
+html {
+  font-size: min(1.25px, calc(100vw / 390), calc(100vh / 858));
+  font-size: min(1.25px, calc(100vw / 390), calc(100dvh / 858));
+  background: var(--ground);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ground);
+  overflow-x: hidden;
+}
+
+/* ---------- film grain -------------------------------------------------- */
+/* Film_Grain is children[0] in Figma — the BOTTOM layer. It shows through
+   unfilled frames but is covered by the tagline box opaque fill. Verified:
+   the tagline interior in Figma's export is flat #d3c7b7, std 0.0. Covers the
+   viewport, not just the stage, so the texture reads on any screen size. */
+.grain {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.20;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---------- stage ------------------------------------------------------- */
+.stage {
+  position: relative;
+  flex: none;
+  width: 390rem;
+  height: 858rem;      /* content 66..792 plus a matching 66px bottom margin */
+  z-index: 1;
+}
+
+.stage > * { position: absolute; }
+
+.i { position: absolute; left: var(--x); top: var(--y); display: block; }
+.flip { transform: scaleY(-1); }
+
+.d-only { display: none; }   /* desktop-only, enabled at the breakpoint */
+
+/* ---------- brush borders ----------------------------------------------- */
+/* The exported outlines ride on one overlay pseudo-element rather than on the
+   boxes themselves, for two reasons: a CENTER-aligned brush overflows the
+   frame rect by ~2px on every side and would be cut by the boxes' own
+   overflow:hidden, and in Figma a frame's stroke paints ABOVE its children,
+   which the z-index reproduces (the desktop runner clipped at the left edge of
+   the runners box has the line drawn over it, not under).
+
+   Each layer sits at (frame origin − overflow) at the SVG's natural size, so
+   the line straddles the frame edge exactly as CENTER alignment does. Overflow
+   is half the difference between the export's bounds and the frame rect:
+   e.g. the phone title box is 366x171 and its export 370x175, so 2rem. */
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;                 /* above the icons, as frame strokes are in Figma */
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-image:
+    url("assets/borders/border-title-m.svg"),
+    url("assets/borders/border-runners-m.svg"),
+    url("assets/borders/border-exercises-m.svg"),
+    url("assets/borders/border-panel-m.svg");
+  background-position:
+    10rem 212rem,             /* title      12,214  − 2 */
+    11rem 384rem,             /* runners    12,385  − 1 */
+    11rem 707rem,             /* exercises  12,708  − 1 */
+    10rem 467rem;             /* panel      12,469  − 2 */
+  background-size:
+    370rem 175rem,
+    368rem  86rem,
+    368rem  86rem,
+    370rem 243rem;
+}
+
+/* ---------- stroked boxes ----------------------------------------------- */
+
+.box--title h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: normal;
+  color: var(--red);
+  text-align: center;
+}
+
+.box--title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;              /* clipsContent: true */
+}
+
+.box--runners   { overflow: hidden; }   /* clipsContent: true — runner clipped */
+.box--exercises { overflow: visible; }  /* clipsContent: false */
+
+/* ---------- graph-paper panel ------------------------------------------- */
+/* Two gradient layers replace the 127 individual rule rectangles in the file.
+   Rules cover only the top 215 design px of the 239px panel, leaving the blank
+   strip above the bottom stroke that the design calls for. */
+.panel {
+  overflow: hidden;   /* clips the grid gradients; the stroke is a brush layer */
+}
+
+.panel::before,
+.panel::after { content: ""; position: absolute; pointer-events: none; }
+
+.panel::before {                      /* verticals */
+  height: 215rem;
+  background-image: repeating-linear-gradient(
+    to right, var(--grid-line) 0 1px, transparent 1px 8rem);
+}
+
+.panel::after {                       /* horizontals */
+  left: 0;
+  width: 100%;
+  background-image: repeating-linear-gradient(
+    to bottom, var(--grid-line) 0 1px, transparent 1px 8rem);
+}
+
+/* ---------- tagline ----------------------------------------------------- */
+/* The fill is opaque so the graph-paper rules stop at the box edge — which also
+   hides the .grain layer underneath. The texture is re-composited here from the
+   same image, under a flat scrim of the box fill at 80% (reproducing .grain's
+   0.20 opacity).
+
+   Sizing mirrors the .grain <img>'s object-fit: cover against the viewport, but
+   written in viewport units rather than the `cover` keyword: the image is
+   1440x1024, so a width of max(100vw, 140.625vh) with auto height is that exact
+   cover scale. Stated this way the grain matches the surrounding page even
+   where background-attachment: fixed degrades to scroll (iOS Safari) and the
+   positioning area becomes the box — only the crop shifts, never the scale,
+   and a shifted crop of noise is indistinguishable. */
+.tagline {
+  position: absolute;
+  background-color: var(--box-fill);
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--box-fill) 80%, transparent) 0 100%),
+    url("assets/film-grain.webp");
+  background-size: max(100vw, 140.625vh) auto;
+  background-position: center;
+  background-attachment: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* ::after (the horizontal rules) is effectively the panel's last child, so it
+     would paint over this opaque box without an explicit stacking bump. */
+  z-index: 1;
+}
+
+.tagline p {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  line-height: normal;
+  color: var(--ink);
+  text-align: center;
+}
+
+/* ==========================================================================
+   PHONE composition — Figma node 6:1847, 390x1024
+   ========================================================================== */
+
+.logo { left: 12rem; top: 66rem; width: 366rem; height: 148rem; display: block; }
+
+.box--title {
+  left: 12rem; top: 214rem; width: 366rem; height: 171rem;
+}
+.box--title h1 { font-size: 38rem; width: 342rem; }
+
+.box--runners {
+  left: 12rem; top: 385rem; width: 366rem; height: 84rem;
+}
+.run-l { width: 70.36rem; height: 68.09rem; }
+.run-s { width: 39.3rem;  height: 38.03rem; }
+.r1 { --x: 10rem;     --y: 15.77rem; }
+.r2 { --x: 88.6rem;   --y: 45.83rem; }
+.r3 { --x: 136.14rem; --y: 15.77rem; }
+.r4 { --x: 202.7rem;  --y: 45.83rem; }
+.r5 { --x: 250rem;    --y: 15.77rem; }
+.r6 { --x: 316.56rem; --y: 45.83rem; }
+
+.panel         { left: 12rem; top: 469rem; width: 366rem; height: 239rem; }
+.panel::before { left: 7rem; top: 0; width: 100%; }
+.panel::after  { top: 8rem; height: 216.5rem; }
+
+/* No stroke on the phone tagline box — the desktop one has a 1px INSIDE stroke,
+   this variant has none. */
+.tagline   { left: 19rem; top: 31rem; width: 328rem; height: 164rem;
+             padding: 12rem 9.5rem; }
+.tagline p { font-size: 27rem; width: 309rem; }
+
+.box--exercises {
+  left: 12rem; top: 708rem; width: 366rem; height: 84rem;
+}
+.rope   { width: 36.73rem; height: 44.16rem; }
+.lifter { width: 57.15rem; height: 56.58rem; --x: 154.85rem; --y: 26rem; }
+.j1 { --x: 18rem;  --y: 37rem; }
+.j2 { --x: 82rem;  --y: 4rem;  }
+.j3 { --x: 248rem; --y: 4rem;  }
+.j4 { --x: 312rem; --y: 37rem; }
+
+/* ==========================================================================
+   DESKTOP composition — Figma node 5:653, 1440x1024
+   Fractional Figma nudge values (178.339, 468.509, 599.679 ...) are snapped to
+   whole design px; they are artifacts of dragging, not intent, and the
+   sub-pixel versions smear every 1px rule across two rows.
+   ========================================================================== */
+
+@media (min-width: 768px) {
+
+  /* Desktop canvas is 1440x1024, never upscaled past 1:1. */
+  html { font-size: min(1px, calc(100vw / 1440), calc(100vh / 1024)); }
+  html { font-size: min(1px, calc(100vw / 1440), calc(100dvh / 1024)); }
+
+  .stage { width: 1440rem; height: 1024rem; }
+
+  .stage::before {
+    background-image:
+      url("assets/borders/border-title-d.svg"),
+      url("assets/borders/border-runners-d.svg"),
+      url("assets/borders/border-exercises-d.svg"),
+      url("assets/borders/border-panel-d.svg");
+    background-position:
+      322rem 284rem,          /* title      324,286 − 2   */
+      322rem 466rem,          /* runners    324,468 − 2   */
+      669rem 466rem,          /* exercises  671,468 − 2   */
+      322rem 597.5rem;        /* panel      324,600 − 2.5 */
+    background-size:
+      795rem 182rem,
+      351rem 135rem,
+      447rem 135rem,
+      795rem 244rem;
+  }
+
+  .d-only { display: block; }
+  .m-only { display: none; }
+
+  .logo { left: 537rem; top: 138rem; width: 366rem; height: 148rem; }
+
+  .i--diet { --x: 1046rem; --y: 218rem; width: 69rem; height: 66.95rem; }
+
+  .box--title {
+    left: 324rem; top: 286rem; width: 791rem; height: 178rem;
+  }
+  .box--title h1 { font-size: 46rem; width: auto; white-space: nowrap; }
+
+  .box--runners {
+    left: 324rem; top: 468rem; width: 347rem; height: 131rem;
+  }
+  .run-l { width: 111rem; height: 107.419rem; }
+  .run-s { width: 62rem;  height: 60rem; }
+  .r1 { --x: -25rem; --y: 19rem; }
+  .r2 { --x: 99rem;  --y: 66rem; }
+  .r3 { --x: 174rem; --y: 19rem; }
+  .r4 { --x: 279rem; --y: 66rem; }
+
+  .panel         { left: 324rem; top: 600rem; width: 791rem; height: 239rem; }
+  .panel::before { left: 7rem; top: 0; width: 785rem; }
+  .panel::after  { top: 7rem; height: 217rem; }
+
+  .tagline   { left: 143rem; top: 48rem; width: 506rem; height: 122rem;
+               padding: 12rem 8rem;
+               border: 1px solid var(--stroke); }  /* strokeAlign INSIDE here */
+  .tagline p { font-size: 32rem; width: 488rem; }
+
+  .box--exercises {
+    left: 671rem; top: 468rem; width: 443rem; height: 131rem;
+  }
+  .rope   { width: 62.376rem; height: 75rem; }
+  .lifter { width: 71rem; height: 70.298rem; --x: 186rem; --y: 59rem; }
+  .j1 { --x: 18rem;  --y: 56rem; }
+  .j2 { --x: 99rem;  --y: 0;     }
+  .j3 { --x: 283rem; --y: 0;     }
+  .j4 { --x: 369rem; --y: 56rem; }
+}
