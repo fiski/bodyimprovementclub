@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Body Improvement Club — social card source</title>
+
+<!-- =========================================================================
+     SOURCE for assets/og-image.png — the link preview served by the og:image
+     tag in index.html. Not linked from the site; it exists so the card can be
+     re-rendered when the poster changes.
+
+     The poster itself cannot be the card: its content is 795x712, nearly
+     square, and og:image wants 1.91:1 (1200x630). So this is a landscape
+     re-cut of the same parts — same ground, grain, logo, brushed title box
+     and icon collage — rather than a crop.
+
+     Regenerate (Chrome headless, 2x for antialiasing, downscaled to 1200x630):
+
+       chrome --headless --disable-gpu --hide-scrollbars \
+              --screenshot=card@2x.png --window-size=1200,630 \
+              --force-device-scale-factor=2 --virtual-time-budget=8000 \
+              og.html
+       python -c "from PIL import Image; i=Image.open('card@2x.png').convert('RGB'); \
+                  i.resize((1200,630), Image.LANCZOS).save('assets/og-image.png')"
+     ===================================================================== -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Bungee+Shade&display=swap">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+
+  body {
+    background: #d8ccbc;                       /* --ground */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  /* Same 20% film grain the page carries. */
+  .grain {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0.20;
+    pointer-events: none;
+  }
+
+  /* The squared mark, not the wordmark: the wordmark repeats the title box
+     below it, and this leaves the type to be said once.
+
+     The -transparent twin, not logo-squared.svg itself — that one carries an
+     opaque #D8CCBC backing rect, which is invisible on flat ground but here
+     punches a flat 248px square out of the film grain. Same mark either way. */
+  .logo { margin-top: 44px; width: 210px; height: 210px; display: block; }
+
+  /* The desktop title box, at its export size: a 791x178 frame whose brush
+     stroke overflows 2px on every side, so the export is 795x182. */
+  .title {
+    position: relative;
+    margin-top: 22px;
+    width: 791px; height: 178px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .title::before {
+    content: "";
+    position: absolute; left: -2px; top: -2px;
+    width: 795px; height: 182px;
+    background: url("assets/borders/border-title-d.svg") no-repeat 0 0 / 795px 182px;
+  }
+  .title h1 {
+    margin: 0;
+    font-family: "Bungee Shade", cursive;
+    font-weight: 400;
+    font-size: 46px;
+    line-height: normal;
+    color: #e30b19;                            /* --red */
+    white-space: nowrap;
+  }
+
+  /* Icon collage, read off the desktop exercises strip. */
+  /* Poster sizes at 1:1; the 70.6px gap is what spreads the six icons to
+     exactly 791px, so the row sits flush with the title box above it. */
+  .icons {
+    margin-top: 26px;
+    display: flex; align-items: flex-end; gap: 70.6px;
+  }
+  .icons img { width: var(--w); height: var(--h); }
+  .icons img { display: block; }
+  .flip { transform: scaleY(-1); }
+</style>
+</head>
+<body>
+
+<img class="grain" src="assets/film-grain.webp" alt="">
+
+<img class="logo" src="assets/logo-squared-transparent.svg" alt="Body Improvement Club">
+
+<div class="title"><h1>body improvement club</h1></div>
+
+<div class="icons">
+  <img src="assets/runner-large.svg" style="--w:111px;    --h:107.419px" alt="">
+  <img src="assets/jump-rope.svg"    style="--w:62.376px; --h:75px"      alt="" class="flip">
+  <img src="assets/diet-bowl.svg"    style="--w:69px;     --h:66.95px"   alt="">
+  <img src="assets/weightlifter.svg" style="--w:71px;     --h:70.298px"  alt="">
+  <img src="assets/jump-rope.svg"    style="--w:62.376px; --h:75px"      alt="">
+  <img src="assets/runner-small.svg" style="--w:62px;     --h:60px"      alt="">
+</div>
+
+</body>
+</html>
