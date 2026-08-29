@@ -136,7 +136,7 @@ body {
 /* The box is the scroll height, not the height of the Figma frame: 946 = the
    inked extent's bottom edge at 922 — the Strava button's brush, 2px below its
    920 rect edge — plus a 24px bottom margin. The top margin needs no help; the
-   composition's own empty band above the logo at y=64 supplies it.
+   composition's own empty band above the logo at y=54 supplies it.
 
    The width is the 380 the scale was fitted to, NOT the canvas's 390: at 390
    the stage is wider than the viewport by its empty right-hand gutter, and an
@@ -151,7 +151,7 @@ body {
    viewport is 5 design px of empty gutter off the LEFT edge, and a box's left
    overflow is not scrollable in a left-to-right page — so there is nothing to
    drag in either direction. Vertically there is no shift: the canvas's own band
-   above the logo at y=64 is the top margin, and where the viewport is taller
+   above the logo at y=54 is the top margin, and where the viewport is taller
    than the poster, body's flex centring places it. */
 .stage {
   position: relative;
@@ -343,7 +343,9 @@ body {
    PHONE composition — Figma node 6:1847, 390x1024
    ========================================================================== */
 
-.logo { left: 12rem; top: 64rem; width: 366rem; height: 148rem; display: block; }
+/* Lifted 10 off Figma's y=64 — the top margin is now real page space above a
+   scrolling poster, not the empty band inside a fitted frame. */
+.logo { left: 12rem; top: 54rem; width: 366rem; height: 148rem; display: block; }
 
 .box--title {
   left: 12rem; top: 214rem; width: 366rem; height: 171rem;
