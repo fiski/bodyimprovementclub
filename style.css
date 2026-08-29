@@ -76,10 +76,12 @@
    background around it. The phone composition inks x 10..380 (the brush
    borders start 2px outside the 12px gutter):
 
-     width 380 = 370 + 10  → a 5px side margin; the 390-wide stage bleeds 10px
-                             of empty gutter off-screen, which body's
-                             overflow-x: hidden absorbs — along with the few px
-                             100vw over-reports by once a scrollbar is present.
+     width 380 = 370 + 10  → a 5px margin on each side.
+
+   The stage is then made 380 wide too and its contents nudged left, rather
+   than left at the canvas's own 390 with the surplus gutter hanging off the
+   edge: overflow that is only clipped still pans under a finger on iOS. See
+   .stage.
 
    No upper cap: the desktop composition takes over at 768px, so the largest
    this can reach is a touch over 2px per design px, on the widest phone held
@@ -97,13 +99,21 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--ground);
-  /* Horizontal only, to clip the phone canvas's deliberately bled gutters.
+  /* Nothing is meant to overflow horizontally — the stage is built to the
+     viewport width (see .stage) — so this is a backstop against sub-pixel
+     rounding and against 100vw over-reporting by the width of a scrollbar,
+     not the thing keeping the poster in place. It cannot be the thing: a
+     clipped overflow still drags under a finger on iOS.
+
      Vertically the page is free to scroll, which is the whole point of sizing
      the poster to the width. min-height rather than height so that a poster
      taller than the viewport grows this box instead of overflowing a centred
-     flex line, which would put its top edge out of reach of the scrollbar. */
+     flex line, which would put its top edge out of reach of the scrollbar.
+
+     No touch-action here: pinch-zoom must still pan in both axes. */
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior-x: none;
 }
 
 /* ---------- film grain -------------------------------------------------- */
@@ -128,14 +138,27 @@ body {
    920 rect edge — plus a 24px bottom margin. The top margin needs no help; the
    composition's own empty band above the logo at y=64 supplies it.
 
-   No offset of its own, so the children's Figma coordinates below stay a
-   faithful transcription. Where the viewport is taller than the poster, body's
-   flex centring is what places it. */
+   The width is the 380 the scale was fitted to, NOT the canvas's 390: at 390
+   the stage is wider than the viewport by its empty right-hand gutter, and an
+   overflow that is merely clipped is still an overflow — iOS hands the user a
+   horizontal drag over it. So the box is cut to the fitted width and the shift
+   slides the composition into it, left 5, which puts the inked extent (x
+   10..380) at 5..375 and leaves the 5px margin on each side.
+
+   It is a transform, not an edit to the children's x offsets, so the Figma
+   coordinates below stay a faithful transcription — the composition is moved
+   as a unit, exactly as it is scaled as a unit. What the shift pushes past the
+   viewport is 5 design px of empty gutter off the LEFT edge, and a box's left
+   overflow is not scrollable in a left-to-right page — so there is nothing to
+   drag in either direction. Vertically there is no shift: the canvas's own band
+   above the logo at y=64 is the top margin, and where the viewport is taller
+   than the poster, body's flex centring places it. */
 .stage {
   position: relative;
   flex: none;
-  width: 390rem;
+  width: 380rem;       /* the fitted width — see html */
   height: 946rem;      /* ink to 922, plus a 24 bottom margin */
+  transform: translateX(-5rem);
   z-index: 1;
 }
 
@@ -375,10 +398,11 @@ body {
   html { font-size: min(1px, calc(100vw / 1440), calc(100vh / 1024)); }
   html { font-size: min(1px, calc(100vw / 1440), calc(100svh / 1024)); }
 
-  /* The full frame here, not the inked extent: the desktop content (129..969
-     of 1024) already sits inside its own canvas with margin to spare, and the
-     canvas fits the viewport, so this composition still never scrolls. */
-  .stage { width: 1440rem; height: 1024rem; }
+  /* The full frame here, not the inked extent, and no shift: the desktop
+     content (129..969 of 1024) already sits inside its own canvas with margin
+     to spare, and the canvas is fitted to both axes, so this composition
+     neither scrolls nor overflows. */
+  .stage { width: 1440rem; height: 1024rem; transform: none; }
 
   .stage::before {
     background-image:
