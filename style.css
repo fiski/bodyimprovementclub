@@ -26,6 +26,12 @@
    rules keep a real 1px floor so they stay crisp at reduced scale.
    ========================================================================== */
 
+/* ---------- palette ------------------------------------------------------ */
+/* These eight tokens mirror, one-for-one, the "Color" variable collection in
+   the Figma file (collection VariableCollectionId:40:28, single mode
+   "Default"). Each custom property below is named after its Figma variable, so
+   a change on either side has an obvious counterpart on the other. Everything
+   further down composes from these — no page rule carries a raw hex. */
 :root {
   --ground:    #d8ccbc;  /* page background  */
   --red:       #e30b19;  /* strokes, title   */
@@ -33,13 +39,17 @@
   --ink:       #000000;  /* tagline type     */
 
   /* Figma's 0.5px grid strokes resolve to a 1px line at 50% alpha (measured
-     off the export, which renders these correctly). */
+     off the export, which renders these correctly). The Figma variable is the
+     opaque base colour, #c90000 — matching the strokes as authored; the 0.5
+     here is this stylesheet emulating that sub-pixel rasterisation, not a
+     colour choice, which is why the two values differ. */
   --grid-line: rgba(201, 0, 0, 0.5);
 
   /* Strava link button. The label is a deeper red than the strokes; the hover
      state fills the box blue and flips the label to white. */
-  --link-ink:   #7f1010;
-  --link-hover: #3a67ed;
+  --link-ink:    #7f1010;
+  --link-hover:  #3a67ed;
+  --ink-inverse: #ffffff;  /* label reversed out of the hover fill */
 
   /* The desktop tagline box is the one stroke still drawn by CSS — it was not
      among the brush exports. Dial the alpha if it reads heavier than the
@@ -255,7 +265,7 @@ body {
 .box--link:focus-visible { background-color: var(--link-hover); }
 
 .box--link:hover span,
-.box--link:focus-visible span { color: #fff; }
+.box--link:focus-visible span { color: var(--ink-inverse); }
 
 /* ---------- graph-paper panel ------------------------------------------- */
 /* Two gradient layers replace the 127 individual rule rectangles in the file.
