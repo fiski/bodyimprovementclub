@@ -1,6 +1,6 @@
 /* ==========================================================================
    Body Improvement Club — landing page
-   Figma: D5ycEapMBObSrYNVvvsyNV — desktop node 5:653 (1440x1024),
+   Figma: BgBx1W0MizlqEKMRBrGjdk — desktop node 33:945 (1440x1024 composition),
                                    phone   node 6:1847 (390x1024)
 
    Geometry is transcribed from the file's absolute child transforms, read via
@@ -8,12 +8,13 @@
    child of a stroked frame by half the stroke width.
 
    Box strokes are BRUSH strokes (Figma's hand-drawn stroke style) — solid
-   #e30b19 at 100%, weight 4 on the title box, 1.85 on the icon strips, 1 on
-   the panel, all strokeAlign CENTER — but painted as a bundle of wobbling ink
-   lines rather than one clean rule. Neither Dev Mode nor the Plugin API
-   exposes the brush; both report a plain solid stroke, which is why the
-   earlier transcription drew flat rules and why sampling a render reads a
-   washed-out ~25% alpha (that is the gaps between bristles, not the colour).
+   #e30b19 at 100%, weight 4 on the title box and the strava link button, 1.85
+   on the icon strips, 1 on the panel, all strokeAlign CENTER — but painted as
+   a bundle of wobbling ink lines rather than one clean rule. Neither Dev Mode
+   nor the Plugin API exposes the brush; both report a plain solid stroke,
+   which is why the earlier transcription drew flat rules and why sampling a
+   render reads a washed-out ~25% alpha (the gaps between bristles, not the
+   colour).
 
    No CSS border can draw this, so each stroked frame was exported from Figma
    as a flattened outline path (assets/borders/*.svg) and is composited by
@@ -34,6 +35,11 @@
   /* Figma's 0.5px grid strokes resolve to a 1px line at 50% alpha (measured
      off the export, which renders these correctly). */
   --grid-line: rgba(201, 0, 0, 0.5);
+
+  /* Strava link button. The label is a deeper red than the strokes; the hover
+     state fills the box blue and flips the label to white. */
+  --link-ink:   #7f1010;
+  --link-hover: #3a67ed;
 
   /* The desktop tagline box is the one stroke still drawn by CSS — it was not
      among the brush exports. Dial the alpha if it reads heavier than the
@@ -58,12 +64,13 @@
    NEITHER divisor is the raw canvas — both are the INKED extent plus a margin,
    so the poster is sized to what is actually drawn rather than to the empty
    background around it. The phone composition inks x 10..380 (the brush
-   borders start 2px outside the 12px gutter) and y 64..793:
+   borders start 2px outside the 12px gutter) and y 64..922 — the bottom is the
+   Strava button's brush, 2px below its 920 rect edge:
 
      width  380 = 370 + 10  → a 5px side margin; the 390-wide stage bleeds
                               10px of empty gutter off-screen, which body's
                               overflow: hidden absorbs.
-     height 765 = 729 + 36  → an 18px margin top and bottom.
+     height 894 = 858 + 36  → an 18px margin top and bottom.
 
    Where a divisor is the binding one the drawing fills that axis exactly, so
    these are zoom controls, not placement ones — vertical placement is .stage's
@@ -75,8 +82,8 @@
    chrome collapses. (vh is the LARGE viewport, which is what made the body
    taller than the visible area and left a strip of empty ground to scroll.) */
 html {
-  font-size: min(1.6px, calc(100vw / 380), calc(100vh / 765));
-  font-size: min(1.6px, calc(100vw / 380), calc(100svh / 765));
+  font-size: min(1.6px, calc(100vw / 380), calc(100vh / 894));
+  font-size: min(1.6px, calc(100vw / 380), calc(100svh / 894));
   background: var(--ground);
 }
 
@@ -113,7 +120,7 @@ body {
 
 /* ---------- stage ------------------------------------------------------- */
 /* The box is the height that gets FITTED (see html), not the height of the
-   Figma frame: 765 = the inked extent 64..793 plus 18px of margin at each end.
+   Figma frame: 894 = the inked extent 64..922 plus 18px of margin at each end.
    The lift then slides the composition into that box — up 46, so the logo's
    y=64 lands 18 below the top and the last brush stroke lands 18 above the
    bottom. Fitting the drawing instead of the frame is what lets the poster
@@ -123,14 +130,14 @@ body {
    It is a transform, not an edit to the children's y offsets, so the Figma
    coordinates below stay a faithful transcription — the composition is moved
    as a unit, exactly as the poster is scaled as a unit. The cost is that the
-   children (which still run to y=793) now overflow this 765 box by 28 before
+   children (which still run to y=922) now overflow this 894 box by 28 before
    the transform lifts them back inside; transforms do not affect layout, so
    that residue would scroll if body did not clip it. */
 .stage {
   position: relative;
   flex: none;
   width: 390rem;
-  height: 765rem;      /* fitted height — see html */
+  height: 894rem;      /* fitted height — see html */
   transform: translateY(-46rem);
   z-index: 1;
 }
@@ -158,7 +165,7 @@ body {
   content: "";
   position: absolute;
   /* Backgrounds do not paint outside their box, and the phone's lowest brush
-     layer ends at y=793 — past the shortened .stage — so this overlay is given
+     layer ends at y=922 — past the shortened .stage — so this overlay is given
      the full canvas height rather than inset: 0. Layer positions are measured
      from the same origin either way. */
   top: 0; left: 0; right: 0; height: 1024rem;
@@ -169,17 +176,20 @@ body {
     url("assets/borders/border-title-m.svg"),
     url("assets/borders/border-runners-m.svg"),
     url("assets/borders/border-exercises-m.svg"),
-    url("assets/borders/border-panel-m.svg");
+    url("assets/borders/border-panel-m.svg"),
+    url("assets/borders/border-link-m.svg");
   background-position:
     10rem 212rem,             /* title      12,214  − 2 */
     11rem 384rem,             /* runners    12,385  − 1 */
     11rem 707rem,             /* exercises  12,708  − 1 */
-    10rem 467rem;             /* panel      12,469  − 2 */
+    10rem 467rem,             /* panel      12,469  − 2 */
+    10rem 790rem;             /* link       12,792  − 2 */
   background-size:
     370rem 175rem,
     368rem  86rem,
     368rem  86rem,
-    370rem 243rem;
+    370rem 243rem,
+    370rem 132rem;
 }
 
 /* ---------- stroked boxes ----------------------------------------------- */
@@ -202,6 +212,50 @@ body {
 
 .box--runners   { overflow: hidden; }   /* clipsContent: true — runner clipped */
 .box--exercises { overflow: visible; }  /* clipsContent: false */
+
+/* ---------- strava link button ------------------------------------------ */
+/* Figma component "Link button" (33:1764), variants Default / Hover. Same
+   brush box as the other frames — weight 4, strokeAlign CENTER, so its outline
+   export overflows the rect by 2px like the title box — drawn by .stage::before
+   above, which is why nothing here paints a border.
+
+   The <a> is the whole box, not just the label: the Hover variant fills the
+   entire frame, so the box is what has to respond. The fill sits under the
+   brush layer (z-index 2 on .stage::before) exactly as a frame fill sits under
+   its stroke in Figma, and that layer is pointer-events: none so it never eats
+   the click. The default variant has no fill, so the grain shows through.
+
+   Vertical placement is flex centring rather than Figma's 35.67 padding: the
+   instances are 128 tall against the component's 129.34, and centring the
+   58px two-line label is what puts it at y=35 in both. */
+.box--link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;              /* clipsContent: true */
+  padding: 0 20.064rem;
+  text-decoration: none;
+}
+
+.box--link span {
+  flex: 1 0 0;
+  min-width: 1px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: normal;
+  text-align: center;
+  text-decoration: underline;
+  color: var(--link-ink);
+}
+
+/* Hover variant. :focus-visible is not in the Figma file — it is the keyboard
+   equivalent of the same state, so the one interactive element on the page is
+   reachable without a mouse. */
+.box--link:hover,
+.box--link:focus-visible { background-color: var(--link-hover); }
+
+.box--link:hover span,
+.box--link:focus-visible span { color: #fff; }
 
 /* ---------- graph-paper panel ------------------------------------------- */
 /* Two gradient layers replace the 127 individual rule rectangles in the file.
@@ -302,6 +356,9 @@ body {
 .box--exercises {
   left: 12rem; top: 708rem; width: 366rem; height: 84rem;
 }
+
+.box--link      { left: 12rem; top: 792rem; width: 366rem; height: 128rem; }
+.box--link span { font-size: 24rem; }
 .rope   { width: 36.73rem; height: 44.16rem; }
 .lifter { width: 57.15rem; height: 56.58rem; --x: 154.85rem; --y: 26rem; }
 .j1 { --x: 18rem;  --y: 37rem; }
@@ -331,17 +388,20 @@ body {
       url("assets/borders/border-title-d.svg"),
       url("assets/borders/border-runners-d.svg"),
       url("assets/borders/border-exercises-d.svg"),
-      url("assets/borders/border-panel-d.svg");
+      url("assets/borders/border-panel-d.svg"),
+      url("assets/borders/border-link-d.svg");
     background-position:
       322rem 284rem,          /* title      324,286 − 2   */
       322rem 466rem,          /* runners    324,468 − 2   */
       669rem 466rem,          /* exercises  671,468 − 2   */
-      322rem 597.5rem;        /* panel      324,600 − 2.5 */
+      322rem 597.5rem,        /* panel      324,600 − 2.5 */
+      321rem 837rem;          /* link       323,839 − 2   */
     background-size:
       795rem 182rem,
       351rem 135rem,
       447rem 135rem,
-      795rem 244rem;
+      795rem 244rem,
+      351rem 132rem;
   }
 
   .d-only { display: block; }
@@ -378,6 +438,10 @@ body {
   .box--exercises {
     left: 671rem; top: 468rem; width: 443rem; height: 131rem;
   }
+
+  /* Sits directly under the panel (600 + 239 = 839) at the runners box's width.
+     The 323 left is Figma's, 1px shy of the 324 column the other boxes use. */
+  .box--link { left: 323rem; top: 839rem; width: 347rem; height: 128rem; }
   .rope   { width: 62.376rem; height: 75rem; }
   .lifter { width: 71rem; height: 70.298rem; --x: 186rem; --y: 59rem; }
   .j1 { --x: 18rem;  --y: 56rem; }
