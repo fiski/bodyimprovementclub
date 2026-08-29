@@ -4,44 +4,17 @@
 <meta charset="utf-8">
 <title>Body Improvement Club — social card source</title>
 
-<!-- =========================================================================
-     SOURCE for assets/og-image.png — the link preview served by the og:image
-     tag in index.html. Not linked from the site; it exists so the card can be
-     re-rendered if the mark or the ground ever changes.
-
-     The card is the squared BIC mark and nothing else. Its letters already
-     step down to the right, so the diagonal is the whole composition — no
-     title box, no icon strip, no wordmark. At the size a link preview is
-     actually shown, that is the only part that stays readable anyway.
-
-     Uses logo-squared-plain.svg, not either of the logo-squared twins: both
-     of those bake film grain across their own 248x248 box, which prints the
-     mark's square onto the ground as a lighter patch. The plain mark is the
-     same three letterforms with that layer dropped, so the grain here is the
-     page's single full-bleed layer, as on the site.
-
-     Regenerate (Chrome headless, 2x for antialiasing, downscaled to 1200x630):
-
-       chrome --headless --disable-gpu --hide-scrollbars \
-              --screenshot=card@2x.png --window-size=1200,630 \
-              --force-device-scale-factor=2 --virtual-time-budget=8000 \
-              og.html
-       python -c "from PIL import Image; i=Image.open('card@2x.png').convert('RGB'); \
-                  i.resize((1200,630), Image.LANCZOS).save('assets/og-image.png')"
-     ===================================================================== -->
-
 <style>
   html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
 
   body {
-    background: #d8ccbc;                       /* --ground */
+    background: #d8ccbc;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
   }
 
-  /* Same 20% film grain the page carries, full bleed. */
   .grain {
     position: absolute; inset: 0;
     width: 100%; height: 100%;

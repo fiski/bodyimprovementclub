@@ -1,0 +1,291 @@
+# Body Improvement Club — implementation notes
+
+Reference for `index.html`, `style.css` and `og.html`. The source files carry no
+comments; everything that explains *why* they look the way they do lives here.
+
+Figma file: `BgBx1W0MizlqEKMRBrGjdk`
+
+- desktop node `33:945` / `5:653` — 1440x1024 composition
+- phone node `6:1847` — 390x1024 composition
+
+---
+
+## index.html
+
+### Link preview
+
+`og:image` MUST be absolute — scrapers do not resolve relative URLs, and GitHub
+Pages serves this project site from a `/bodyimprovementclub` subpath, so a
+root-relative path would 404. Update both the URLs in the head and the Pages
+settings together if the site ever moves to a custom domain.
+
+`assets/og-image.png` is rendered from `og.html`; see that file to regenerate.
+
+Facebook, LinkedIn and X cache a scrape aggressively — after changing the card,
+re-scrape the URL in each platform's debugger to see the new one.
+
+### Markup notes
+
+- `.i--diet` (`d-only`) is desktop-only: the phone composition has no diet-bowl
+  icon.
+- The icon strips are a collage; per-icon offsets live in `style.css` so they can
+  differ between the desktop and phone compositions. `r5`/`r6` are the two extra
+  runners the phone layout adds.
+- The whole `.box--link` is the link, not just the label: the Figma Hover variant
+  fills the entire button. Its brush border is drawn by `.stage::before`.
+
+---
+
+## style.css
+
+Geometry is transcribed from the file's absolute child transforms, read via the
+Plugin API — NOT from Figma's generated Tailwind, which offsets every child of a
+stroked frame by half the stroke width.
+
+### Brush strokes
+
+Box strokes are BRUSH strokes (Figma's hand-drawn stroke style) — solid `#e30b19`
+at 100%, weight 4 on the title box and the strava link button, 1.85 on the icon
+strips, 1 on the panel, all `strokeAlign: CENTER` — but painted as a bundle of
+wobbling ink lines rather than one clean rule. Neither Dev Mode nor the Plugin API
+exposes the brush; both report a plain solid stroke, which is why an earlier
+transcription drew flat rules and why sampling a render reads a washed-out ~25%
+alpha (the gaps between bristles, not the colour).
+
+No CSS border can draw this, so each stroked frame was exported from Figma as a
+flattened outline path (`assets/borders/*.svg`) and is composited by
+`.stage::before`.
+
+The exported outlines ride on one overlay pseudo-element rather than on the boxes
+themselves, for two reasons: a CENTER-aligned brush overflows the frame rect by
+~2px on every side and would be cut by the boxes' own `overflow: hidden`, and in
+Figma a frame's stroke paints ABOVE its children, which the `z-index` reproduces
+(the desktop runner clipped at the left edge of the runners box has the line drawn
+over it, not under).
+
+Each layer sits at (frame origin − overflow) at the SVG's natural size, so the
+line straddles the frame edge exactly as CENTER alignment does. Overflow is half
+the difference between the export's bounds and the frame rect: e.g. the phone
+title box is 366x171 and its export 370x175, so `2rem`.
+
+Backgrounds do not paint outside their box, so `.stage::before` has to be at least
+as tall as the lowest brush layer: y=922 on the phone, 969 on desktop. Both
+`.stage` heights clear that, so it simply fills the stage.
+
+### Palette
+
+The eight tokens on `:root` mirror, one-for-one, the "Color" variable collection
+in the Figma file (collection `VariableCollectionId:40:28`, single mode
+"Default"). Each custom property is named after its Figma variable, so a change on
+either side has an obvious counterpart on the other. Everything further down
+composes from these — no page rule carries a raw hex.
+
+| Token | Value | Role |
+| --- | --- | --- |
+| `--ground` | `#d8ccbc` | page background |
+| `--red` | `#e30b19` | strokes, title |
+| `--box-fill` | `#d3c7b7` | tagline box fill |
+| `--ink` | `#000000` | tagline type |
+| `--link-ink` | `#7f1010` | strava label |
+| `--link-hover` | `#3a67ed` | strava hover fill |
+| `--ink-inverse` | `#ffffff` | label reversed out of the hover fill |
+
+`--grid-line`: Figma's 0.5px grid strokes resolve to a 1px line at 50% alpha
+(measured off the export, which renders these correctly). The Figma variable is
+the opaque base colour, `#c90000` — matching the strokes as authored; the `0.5`
+in the stylesheet is emulating that sub-pixel rasterisation, not a colour choice,
+which is why the two values differ.
+
+`--stroke-alpha` / `--stroke`: the desktop tagline box is the one stroke still
+drawn by CSS — it was not among the brush exports. Dial the alpha if it reads
+heavier than the brushed lines around it.
+
+### Scaling
+
+Both compositions are fixed-size posters, so rather than reflow them, `1rem` is
+defined as one design pixel and tracks the viewport. The whole canvas scales as a
+unit and never overflows horizontally. Hairline rules keep a real 1px floor so
+they stay crisp at reduced scale.
+
+**Phone.** Canvas is 390x1024 design px. The scale is bound by WIDTH alone: the
+poster is drawn edge to edge and the page scrolls vertically whenever that makes
+it taller than the viewport. It used to be bound by both axes so that nothing ever
+scrolled, but on a phone the height was almost always the binding one and the
+poster shrank to roughly three quarters of the screen — a narrow column of drawing
+with empty ground down either side.
+
+The divisor is not the raw canvas but the INKED extent plus a margin, so the
+poster is sized to what is actually drawn rather than to the empty background
+around it. The phone composition inks x 10..380 (the brush borders start 2px
+outside the 12px gutter):
+
+    width 380 = 370 + 10  →  a 5px margin on each side
+
+The stage is then made 380 wide too and its contents nudged left, rather than left
+at the canvas's own 390 with the surplus gutter hanging off the edge: overflow
+that is only clipped still pans under a finger on iOS.
+
+No upper cap: the desktop composition takes over at 768px, so the largest this can
+reach is a touch over 2px per design px, on the widest phone held in portrait.
+
+**Desktop.** Canvas is 1440x1024, never upscaled past 1:1. Fractional Figma nudge
+values (178.339, 468.509, 599.679 …) are snapped to whole design px; they are
+artifacts of dragging, not intent, and the sub-pixel versions smear every 1px rule
+across two rows.
+
+### body
+
+Nothing is meant to overflow horizontally — the stage is built to the viewport
+width — so `overflow-x: hidden` is a backstop against sub-pixel rounding and
+against `100vw` over-reporting by the width of a scrollbar, not the thing keeping
+the poster in place. It cannot be the thing: a clipped overflow still drags under a
+finger on iOS.
+
+Vertically the page is free to scroll, which is the whole point of sizing the
+poster to the width. `min-height` rather than `height` so that a poster taller than
+the viewport grows this box instead of overflowing a centred flex line, which would
+put its top edge out of reach of the scrollbar.
+
+No `touch-action` here: pinch-zoom must still pan in both axes.
+
+### .grain
+
+`Film_Grain` is `children[0]` in Figma — the BOTTOM layer. It shows through
+unfilled frames but is covered by the tagline box's opaque fill. Verified: the
+tagline interior in Figma's export is flat `#d3c7b7`, std 0.0. Covers the viewport,
+not just the stage, so the texture reads on any screen size.
+
+### .stage
+
+The phone box is the scroll height, not the height of the Figma frame: 946 = the
+inked extent's bottom edge at 922 — the Strava button's brush, 2px below its 920
+rect edge — plus a 24px bottom margin. The top margin needs no help; the
+composition's own empty band above the logo at y=54 supplies it.
+
+The width is the 380 the scale was fitted to, NOT the canvas's 390: at 390 the
+stage is wider than the viewport by its empty right-hand gutter, and an overflow
+that is merely clipped is still an overflow — iOS hands the user a horizontal drag
+over it. So the box is cut to the fitted width and the shift slides the composition
+into it, left 5, which puts the inked extent (x 10..380) at 5..375 and leaves the
+5px margin on each side.
+
+It is a transform, not an edit to the children's x offsets, so the Figma
+coordinates stay a faithful transcription — the composition is moved as a unit,
+exactly as it is scaled as a unit. What the shift pushes past the viewport is 5
+design px of empty gutter off the LEFT edge, and a box's left overflow is not
+scrollable in a left-to-right page — so there is nothing to drag in either
+direction. Vertically there is no shift: the canvas's own band above the logo at
+y=54 is the top margin, and where the viewport is taller than the poster, body's
+flex centring places it.
+
+On desktop it is the full frame, not the inked extent, and no shift: the desktop
+content (129..969 of 1024) already sits inside its own canvas with margin to spare,
+and the canvas is fitted to both axes, so this composition neither scrolls nor
+overflows.
+
+### Boxes
+
+- `.box--title` — `clipsContent: true`
+- `.box--runners` — `clipsContent: true` (runner clipped)
+- `.box--exercises` — `clipsContent: false`
+- `.panel` — `overflow: hidden` clips the grid gradients; the stroke is a brush
+  layer.
+- `.logo` on phone is lifted 10 off Figma's y=64 — the top margin is now real page
+  space above a scrolling poster, not the empty band inside a fitted frame.
+
+The `background-position` values on `.stage::before` are each the frame origin
+minus the brush overflow:
+
+| Layer | Phone | Desktop |
+| --- | --- | --- |
+| title | 12,214 − 2 | 324,286 − 2 |
+| runners | 12,385 − 1 | 324,468 − 2 |
+| exercises | 12,708 − 1 | 671,468 − 2 |
+| panel | 12,469 − 2 | 324,600 − 2.5 |
+| link | 12,792 − 2 | 323,839 − 2 |
+
+### Strava link button
+
+Figma component "Link button" (`33:1764`), variants Default / Hover. Same brush box
+as the other frames — weight 4, `strokeAlign: CENTER`, so its outline export
+overflows the rect by 2px like the title box — drawn by `.stage::before`, which is
+why nothing in `.box--link` paints a border.
+
+The `<a>` is the whole box, not just the label: the Hover variant fills the entire
+frame, so the box is what has to respond. The fill sits under the brush layer
+(`z-index: 2` on `.stage::before`) exactly as a frame fill sits under its stroke in
+Figma, and that layer is `pointer-events: none` so it never eats the click. The
+default variant has no fill, so the grain shows through.
+
+Vertical placement is flex centring rather than Figma's 35.67 padding: the
+instances are 128 tall against the component's 129.34, and centring the 58px
+two-line label is what puts it at y=35 in both.
+
+`:focus-visible` is not in the Figma file — it is the keyboard equivalent of the
+Hover state, so the one interactive element on the page is reachable without a
+mouse.
+
+On desktop `.box--link` sits directly under the panel (600 + 239 = 839) at the
+runners box's width. The 323 left is Figma's, 1px shy of the 324 column the other
+boxes use.
+
+### Graph-paper panel
+
+Two gradient layers replace the 127 individual rule rectangles in the file. Rules
+cover only the top 215 design px of the 239px panel, leaving the blank strip above
+the bottom stroke that the design calls for.
+
+### Tagline
+
+The fill is opaque so the graph-paper rules stop at the box edge — which also hides
+the `.grain` layer underneath. The texture is re-composited here from the same
+image, under a flat scrim of the box fill at 80% (reproducing `.grain`'s 0.20
+opacity).
+
+Sizing mirrors the `.grain` `<img>`'s `object-fit: cover` against the viewport, but
+written in viewport units rather than the `cover` keyword: the image is 1440x1024,
+so a width of `max(100vw, 140.625vh)` with auto height is that exact cover scale.
+Stated this way the grain matches the surrounding page even where
+`background-attachment: fixed` degrades to scroll (iOS Safari) and the positioning
+area becomes the box — only the crop shifts, never the scale, and a shifted crop of
+noise is indistinguishable.
+
+`.panel::after` (the horizontal rules) is effectively the panel's last child, so it
+would paint over this opaque box without an explicit stacking bump — hence
+`z-index: 1`.
+
+No stroke on the phone tagline box — the desktop one has a 1px INSIDE stroke, this
+variant has none.
+
+---
+
+## og.html
+
+SOURCE for `assets/og-image.png` — the link preview served by the `og:image` tag in
+`index.html`. Not linked from the site; it exists so the card can be re-rendered if
+the mark or the ground ever changes.
+
+The card is the squared BIC mark and nothing else. Its letters already step down to
+the right, so the diagonal is the whole composition — no title box, no icon strip,
+no wordmark. At the size a link preview is actually shown, that is the only part
+that stays readable anyway.
+
+Uses `logo-squared-plain.svg`, not either of the `logo-squared` twins: both of
+those bake film grain across their own 248x248 box, which prints the mark's square
+onto the ground as a lighter patch. The plain mark is the same three letterforms
+with that layer dropped, so the grain here is the page's single full-bleed layer,
+as on the site.
+
+The page carries the same 20% film grain as the site, full bleed, on `#d8ccbc`
+(`--ground`).
+
+Regenerate (Chrome headless, 2x for antialiasing, downscaled to 1200x630):
+
+```sh
+chrome --headless --disable-gpu --hide-scrollbars \
+       --screenshot=card@2x.png --window-size=1200,630 \
+       --force-device-scale-factor=2 --virtual-time-budget=8000 \
+       og.html
+python -c "from PIL import Image; i=Image.open('card@2x.png').convert('RGB'); \
+           i.resize((1200,630), Image.LANCZOS).save('assets/og-image.png')"
+```
