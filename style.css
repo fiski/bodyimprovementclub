@@ -266,6 +266,37 @@ body {
 .j3 { --x: 248rem; --y: 4rem;  }
 .j4 { --x: 312rem; --y: 37rem; }
 
+.box--copy {
+  left: 12rem; top: 286rem; width: 366rem; height: 525rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rem 24rem;
+}
+
+.box--copy p {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 18rem;
+  line-height: 23rem;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--link-ink);
+}
+
+.stage--shop::before {
+  background-image:
+    url("assets/borders/border-tabs.svg"),
+    url("assets/borders/border-box-m.svg");
+  background-position:
+    10rem 234rem,
+    10rem 284rem;
+  background-size:
+    370rem  54rem,
+    370rem 529rem;
+}
+
 @media (min-width: 768px) {
 
   html { font-size: min(1px, calc(100vw / 1440), calc(100vh / 1024)); }
@@ -295,6 +326,20 @@ body {
       447rem 135rem,
       795rem 244rem,
       351rem 132rem;
+  }
+
+  .box--copy { left: 324rem; width: 791rem; }
+
+  .stage--shop::before {
+    background-image:
+      url("assets/borders/border-tabs.svg"),
+      url("assets/borders/border-table-d.svg");
+    background-position:
+      322rem 234rem,
+      322rem 284rem;
+    background-size:
+      370rem  54rem,
+      795rem 529rem;
   }
 
   .d-only { display: block; }
