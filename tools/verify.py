@@ -172,6 +172,21 @@ def check_log(r):
     r.check(near(bottom, (216, 204, 188), tol=10),
             "log: no 11th row below y=800", hexof(bottom), "ground")
 
+    # The band must paint BENEATH the text: an inverted #7f1010 reads #7f10ef.
+    # B=16 dark red vs B=239 inverted, so the blue channel separates them cleanly.
+    for i in (1, 3, 5, 7, 9):                 # banded rows, 0-indexed
+        top = 381 + i * 39
+        ink = min((im.getpixel((x, y)) for y in range(top + 4, top + 31)
+                   for x in range(348, 500)), key=sum)
+        r.check(ink[2] < 100,
+                f"log: row {i + 1} text is not inverted by the band", hexof(ink), "#7f1010-ish")
+
+    # No cell text may spill past the box interior's right edge (x=1091).
+    # sum < 400 catches dark glyph ink without tripping on the washed pink border (~577).
+    spill = [x for x in range(1092, 1140)
+             if any(sum(im.getpixel((x, y))) < 400 for y in range(381, 771))]
+    r.check(not spill, "log: no cell text spills past the box interior", spill[:6], "[]")
+
 
 def check_shop(r):
     im = shot("shop.html", DESKTOP)

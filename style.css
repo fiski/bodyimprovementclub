@@ -334,22 +334,16 @@ body {
 }
 
 .log tbody tr:nth-child(even) td {
-  position: relative;
-}
-
-.log tbody tr:nth-child(even) td::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: blue;
-  mix-blend-mode: difference;
-  pointer-events: none;
+  background-image:
+    linear-gradient(blue, blue),
+    linear-gradient(var(--ground), var(--ground));
+  background-blend-mode: difference;
 }
 
 .log .c-member   { width: 218rem; }
-.log .c-activity { width: 351rem; }
+.log .c-activity { width: 319rem; }
 .log .c-date     { width: 118rem; }
-.log .c-stat     { width:  56rem; }
+.log .c-stat     { width:  88rem; }
 
 .log th:not(:last-child),
 .log td:not(:last-child) { padding-right: 18rem; }

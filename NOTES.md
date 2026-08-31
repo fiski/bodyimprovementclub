@@ -310,18 +310,24 @@ layer lists on `.stage--start` / `.stage--log` / `.stage--shop`.
 
 ### The log table
 
-The banded rows are BLUE, not yellow: each even-row cell carries a `::before` of
-`background: blue` with `mix-blend-mode: difference`, exactly as the Figma
-component does. Against the ground that computes to
+The banded rows are BLUE, not yellow: each even-row cell blends a `blue` layer
+against a `var(--ground)` layer via `background-blend-mode: difference`, exactly
+as the Figma component does. Against the ground that computes to
 `|#d8ccbc - #0000ff| = #d8cc43`, which is what the frames sample. Keeping the
 mechanism rather than the result means the band tracks `--ground` if the ground is
 ever retuned, and it grains the way the frame does. Do not "simplify" it to a
 yellow token.
 
-The band is a per-cell `::before`, not one element per row, because
-`position: relative` on `<td>` is reliable where the same on `<tr>` is not. The
-segments abut into one unbroken band because `inset: 0` covers each cell's
-padding.
+The band is painted as the cell's own `background-image` (two stacked
+`linear-gradient(solid, solid)` layers blended with `background-blend-mode`),
+NOT a `::before`. An absolutely positioned `::before` paints in a later phase
+than the cell's in-flow text and gets caught by its own `mix-blend-mode`,
+inverting the glyphs along with the ground (`#7f1010` ink reads as `#7f10ef`
+under the band — verified by `tools/verify.py log`, which samples row text for
+this). A `background-image` paints in the background layer, guaranteed below
+content, so the dark-red ink stays dark-red on top of the yellow band. Do not
+reach for `z-index: -1` on a `::before` instead — that joins the root stacking
+context and lands under `.grain` at `z-index: 0`, washing the band out.
 
 The header's `padding-bottom: 32rem` is the drawn 8px header padding plus the
 drawn 24px gap between header and rows. Folding the gap into the header cell puts
@@ -332,13 +338,23 @@ the first row at y=95 with no spacer row, and keeps the whole box at
 the banding stays on a short feed.
 
 `white-space: nowrap` on `.log th`/`.log td` is required, not decorative: several
-of the hardcoded stat values (e.g. "8.2 KM") measure wider than the drawn 56rem
-stat column at Overpass Mono's real advance width, and without `nowrap` the space
-before the unit becomes a soft-wrap point, doubling that row's height and
-knocking every following row off the 39rem pitch (verified by sampling row bands
-in `tools/verify.py log` — omitting `nowrap` flips rows 2-5 and 10 and paints an
-11th row below y=800). Single-line rows are load-bearing for the fixed 39rem
-pitch, not just tidy.
+of the hardcoded stat values (e.g. "8.2 KM") measure wider than a stat column
+sized for Figma's 5-character placeholder ("index") at Overpass Mono's real
+advance width, and without `nowrap` the space before the unit becomes a
+soft-wrap point, doubling that row's height and knocking every following row
+off the 39rem pitch (verified by sampling row bands in `tools/verify.py log` —
+omitting `nowrap` flips rows 2-5 and 10 and paints an 11th row below y=800).
+Single-line rows are load-bearing for the fixed 39rem pitch, not just tidy.
+
+Column widths are `218 / 319 / 118 / 88`, not the drawn `218 / 351 / 118 / 56`:
+the drawn 56rem stat column was sized for the 5-character placeholder and is
+too narrow for real values ("31.7 KM", "1:04:20", ~81rem at 18rem Overpass
+Mono) — with `nowrap` in place those values overflowed rightward past the box's
+own interior and out through its brush border rather than wrapping. Activity
+donates ~100rem of its slack (it has the most headroom of any column) to widen
+stat from 56 to 88; the four still sum to the drawn 743. `tools/verify.py log`
+asserts no cell ink appears past the interior's right edge (x=1091) to catch
+this class of regression.
 
 ---
 
