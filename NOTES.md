@@ -308,6 +308,38 @@ child and `.stage::before` composites every brush export above all children at
 `.stage::before` is split — shared properties on `.stage::before`, the per-view
 layer lists on `.stage--start` / `.stage--log` / `.stage--shop`.
 
+### The log table
+
+The banded rows are BLUE, not yellow: each even-row cell carries a `::before` of
+`background: blue` with `mix-blend-mode: difference`, exactly as the Figma
+component does. Against the ground that computes to
+`|#d8ccbc - #0000ff| = #d8cc43`, which is what the frames sample. Keeping the
+mechanism rather than the result means the band tracks `--ground` if the ground is
+ever retuned, and it grains the way the frame does. Do not "simplify" it to a
+yellow token.
+
+The band is a per-cell `::before`, not one element per row, because
+`position: relative` on `<td>` is reliable where the same on `<tr>` is not. The
+segments abut into one unbroken band because `inset: 0` covers each cell's
+padding.
+
+The header's `padding-bottom: 32rem` is the drawn 8px header padding plus the
+drawn 24px gap between header and rows. Folding the gap into the header cell puts
+the first row at y=95 with no spacer row, and keeps the whole box at
+40 + 23 + 32 + 390 + 40 = 525.
+
+`height: 23rem` on the row cells is what keeps a padded EMPTY row 39px tall, so
+the banding stays on a short feed.
+
+`white-space: nowrap` on `.log th`/`.log td` is required, not decorative: several
+of the hardcoded stat values (e.g. "8.2 KM") measure wider than the drawn 56rem
+stat column at Overpass Mono's real advance width, and without `nowrap` the space
+before the unit becomes a soft-wrap point, doubling that row's height and
+knocking every following row off the 39rem pitch (verified by sampling row bands
+in `tools/verify.py log` — omitting `nowrap` flips rows 2-5 and 10 and paints an
+11th row below y=800). Single-line rows are load-bearing for the fixed 39rem
+pitch, not just tidy.
+
 ---
 
 ## og.html

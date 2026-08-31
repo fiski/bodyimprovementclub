@@ -297,6 +297,84 @@ body {
     370rem 529rem;
 }
 
+.box--table {
+  left: 12rem; top: 286rem; width: 366rem; height: 525rem;
+  padding: 40rem 24rem;
+}
+
+.log {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.log th,
+.log td {
+  padding: 0;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+  font-family: var(--font-ui);
+  font-size: 18rem;
+  line-height: 23rem;
+  text-transform: uppercase;
+  color: var(--link-ink);
+}
+
+.log thead th {
+  font-weight: 700;
+  text-decoration: underline;
+  padding-bottom: 32rem;
+}
+
+.log tbody td {
+  font-weight: 400;
+  height: 23rem;
+  padding: 8rem 0;
+}
+
+.log tbody tr:nth-child(even) td {
+  position: relative;
+}
+
+.log tbody tr:nth-child(even) td::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: blue;
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+
+.log .c-member   { width: 218rem; }
+.log .c-activity { width: 351rem; }
+.log .c-date     { width: 118rem; }
+.log .c-stat     { width:  56rem; }
+
+.log th:not(:last-child),
+.log td:not(:last-child) { padding-right: 18rem; }
+
+.fallback {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 18rem;
+  line-height: 23rem;
+  text-transform: uppercase;
+  color: var(--link-ink);
+}
+
+.stage--log::before {
+  background-image:
+    url("assets/borders/border-tabs.svg"),
+    url("assets/borders/border-table-m.svg");
+  background-position:
+    10rem 234rem,
+    10rem 284rem;
+  background-size:
+    370rem  54rem,
+    370rem 529rem;
+}
+
 @media (min-width: 768px) {
 
   html { font-size: min(1px, calc(100vw / 1440), calc(100vh / 1024)); }
@@ -331,6 +409,20 @@ body {
   .box--copy { left: 324rem; width: 791rem; }
 
   .stage--shop::before {
+    background-image:
+      url("assets/borders/border-tabs.svg"),
+      url("assets/borders/border-table-d.svg");
+    background-position:
+      322rem 234rem,
+      322rem 284rem;
+    background-size:
+      370rem  54rem,
+      795rem 529rem;
+  }
+
+  .box--table { left: 324rem; width: 791rem; }
+
+  .stage--log::before {
     background-image:
       url("assets/borders/border-tabs.svg"),
       url("assets/borders/border-table-d.svg");
