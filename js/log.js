@@ -2,11 +2,7 @@
    always exactly ROW_COUNT rows: a shorter feed pads, a longer one truncates. */
 const ROW_COUNT = 10;
 const COLUMNS = ["member", "activity", "date", "stat"];
-// A truly empty td gets no line box in this renderer, so its height:23rem
-// collapses (loses the 8rem+8rem padding, landing at 23rem not 39rem) and the
-// pad row loses its band. A non-breaking space is visually blank but keeps
-// the line box, so the padded row still measures 39rem tall.
-const EMPTY = { member: " ", activity: " ", date: " ", stat: " " };
+const EMPTY = { member: "", activity: "", date: "", stat: "" };
 
 async function loadActivities() {
   return ACTIVITIES;

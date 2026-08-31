@@ -334,8 +334,15 @@ drawn 24px gap between header and rows. Folding the gap into the header cell put
 the first row at y=95 with no spacer row, and keeps the whole box at
 40 + 23 + 32 + 390 + 40 = 525.
 
-`height: 23rem` on the row cells is what keeps a padded EMPTY row 39px tall, so
-the banding stays on a short feed.
+`height: 23rem` on the row cells is necessary but not sufficient to keep a padded
+EMPTY row 39px tall: a `<td>` with no light-DOM children gets no line box in this
+renderer, so the height alone still collapses (loses `padding: 8rem 0`, landing
+at 23rem not 39rem) and the banding drops out on a short feed. The
+`.log tbody td:empty::after { content: "\00a0"; }` rule just below restores the
+line box for any genuinely empty cell — a padded row from `log.js`'s `pad()`, or
+a real feed entry with a blank field — so `height: 23rem` plus that generated
+nbsp is what actually holds the row at 39rem. See `## js/` further down for how
+`pad()`'s `EMPTY` rows exercise this.
 
 `white-space: nowrap` on `.log th`/`.log td` is required, not decorative: several
 of the hardcoded stat values (e.g. "8.2 KM") measure wider than a stat column
@@ -410,11 +417,8 @@ Both are classic scripts loaded in order, NOT modules — `type="module"` is blo
 by CORS on `file://`, and both `tools/verify.py` and the `og.html` recipe render
 local files.
 
-`EMPTY`'s fields are a non-breaking space (` `), not `""`. A `<td>` with
-truly empty `textContent` gets no line box in this renderer, so its
-`height: 23rem` collapses (loses the `padding: 8rem 0`, landing at 23rem instead
-of 39rem) and the padded row loses its band — silently, since nothing else about
-it looks wrong until you check a short feed. A plain space is not safe either:
-as the cell's only content it sits at both the start and end of the line, so
-CSS whitespace collapsing can still strip it to nothing. ` ` is exempt from
-that collapsing, so it's the one placeholder that reliably keeps the line box.
+`EMPTY`'s fields are genuinely empty strings (`""`), matching a real feed's
+blank field. A truly empty `<td>` would otherwise lose its line box and its
+39rem row height — see the `.log tbody td:empty::after` rule in `style.css`'s
+`### The log table` section, which is what actually keeps a padded (or
+blank-field) row banded.
