@@ -83,6 +83,15 @@ drawn 799x533 but its row grid sums to 743, the interior a 791 box implies
 (`791 - 2*24` padding), so the component was resized to 791x525 to match the grid
 it was built for. Both exports carry the usual 2px brush overflow per side.
 
+Re-exporting either border later: the naive recipe (clone the component, then
+remove each cell's children directly) throws `Removing this node is not
+allowed`, because both the Table clone's children and the Menu's three cells
+are component instances, and Figma refuses to remove an instance's children
+directly. Call `detachInstance()` first — on the clone itself for the table,
+and on *each cell* for the tab strip (detaching the outer Menu clone alone is
+not enough; every `Menu item` cell inside it is still its own instance and
+needs its own `detachInstance()` before its label can be removed).
+
 The `Menu` component's middle cell (`log of gains`) was found HUG-sized, auto-
 fitting its label to 144.13px while its siblings stayed FIXED at 122px — a drift
 from the intended three-equal-122px strip (366 wide, flush with the 366px phone
