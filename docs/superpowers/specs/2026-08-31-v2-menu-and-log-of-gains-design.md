@@ -110,6 +110,29 @@ alternative someone will otherwise reopen.
 
 ---
 
+## Typography — a third font joins
+
+v2 introduces **Overpass Mono**, which the site does not currently load. Both new
+components use it and neither existing font substitutes:
+
+| Where | Family | Weight | Size |
+|---|---|---|---|
+| Tab labels | Overpass Mono | SemiBold (600) | 14px |
+| Table header | Overpass Mono | Bold (700) | 18px |
+| Table rows | Overpass Mono | Regular (400) | 18px |
+
+So the Google Fonts link gains `Overpass+Mono:wght@400;600;700` alongside the
+existing `Bungee Shade` and `Major Mono Display`, and `:root` gains a
+`--font-table` (or similarly named) custom property beside `--font-display` and
+`--font-mono`, following the existing token pattern.
+
+`Major Mono Display` stays where it is — the tagline and nothing else. The two
+mono faces are not interchangeable: `Major Mono Display` is the lowercase-tall
+display face in the tagline, `Overpass Mono` is a conventional monospace for
+tabular text.
+
+---
+
 ## Files
 
 ```
@@ -165,31 +188,53 @@ from `Menu` instance `58:159` → three `Menu item` instances at x=0, 122, 244.
 `366 = 3 x 122`, and the phone content box is also 366 wide, **so the tab strip is
 identical at both breakpoints** — one export, one rule set, no phone variant.
 
-States:
+Every cell carries a 4px `--red` stroke on all four sides, `padding: 16px
+20.064px`, and a label in **Overpass Mono SemiBold 14px, uppercase**. The
+20.064px matches the existing `.box--link` padding exactly.
 
-- **Inactive** — transparent fill, red brush outline, `--link-ink` label.
-- **Active** — solid `--red` fill, cream label (`--ink-inverse` or the ground;
-  read the exact fill and text colour off the `Menu item` variant).
+States, read off the `Menu item` variants:
+
+- **Inactive** — no fill, red brush outline, `--link-ink` (`#7f1010`) label.
+- **Active** — `--red` fill **plus `mix-blend-mode: color-burn`**, label
+  `#d8ccbc` — the *ground* token, not `--ink-inverse`. The burn is why the active
+  cell samples `#d10000` in the rendered frame rather than `#e30b19`:
+  `burn(#d8ccbc, #e30b19) = #d30000`, measured `#d10000` through the grain.
 - **Hover / focus-visible** — follow the existing `.box--link` precedent:
   `--link-hover` fill with `--ink-inverse` label. Applies to inactive tabs only;
-  the active tab is already the current page.
+  the active tab is already the current page. Not in the design; carried over so
+  the tabs behave like the site's other interactive element.
 
-### Why one border export covers every active state
+### The active tab does not interrupt the box border (measured)
 
-The tab metaphor requires the box's top edge to be *absent* under the active tab,
-which naively means a separate box export per active state — nine exports.
+An earlier draft of this spec assumed the tab metaphor needs the box's top edge
+to be *absent* under the active tab, and proposed hiding it red-on-red. **Pixel
+sampling of both frames shows that is not what the design does**, and no trick is
+needed.
 
-It does not, because the brush lines and the active fill are both `--red`. An
-opaque red field over a red brush line is indistinguishable from the field, and
-the exports are solid `#e30b19` painted as bristles with gaps (see `NOTES.md`).
-So the active cell's fill erases, red-on-red, both its own bottom edge and the
-segment of the box's top edge beneath it. One shared tab-strip export carrying
-every edge, one box export per view, and no z-index reordering against
-`.stage::before`.
+Sampling a vertical slice through the seam at y=278..299:
 
-Verify against the `Menu item` active variant during transcription: if that
-variant genuinely drops its bottom stroke in Figma, the effect is identical and
-the reasoning above is simply belt-and-braces.
+| y | under active tab | under inactive tab | right of the strip |
+|---|---|---|---|
+| 278–283 | `#d10000` (fill) | ground | ground |
+| 284–285 | `#d10000` (fill) | pink line | ground |
+| 286–287 | **pink line** | **pink line** | **pink line** |
+| 288+ | ground | ground | ground |
+
+The box's top brush line runs **continuously** at y=286–287 across all three
+cells and onward to the right, and the active cell's fill stops at y=285 rather
+than swallowing it. The line reads pink (`#d78782`-ish) rather than `#e30b19`
+because of the bristle gaps — the same ~25% apparent alpha `NOTES.md` already
+documents.
+
+This falls out of the existing architecture for free: the tab strip is a `.stage`
+child, and `.stage::before` — which composites every brush export — sits above
+all children at `z-index: 2`. So the box's top edge paints over the tab strip
+exactly as the frames show, with no z-index changes and no per-state exports.
+One tab-strip export, one box export per view.
+
+The tabs still read as seated *on* the box because the strip's own 4px bottom
+stroke and the box's top stroke occupy the same 4px band (the strip's 236+50=286
+bottom edge is the box's 286 top edge), sharing one line between them.
 
 ---
 
@@ -205,21 +250,72 @@ Changes: `.logo` top 129 → 70, and the tab strip above it.
 
 ## LOG OF GAINS view
 
-From `Table` instance `58:469`, drawn at (325, 286) 799x533 and placed at the
-reconciled (**324**, 286) — a **791x525** box with the
-usual 4px brush overflow on each side (`799 = 791 + 8`, `533 = 525 + 8`).
+From `Table` instance `58:469`, placed at the reconciled (**324**, 286) at
+**791x525**.
 
-Interior:
+### The 799-vs-791 drift, and why 791 wins
 
-- `Table Header` at (24, 40), 751x31
-- `Rows` frame at (24, 95), 751x390 — ten `Table Row` instances of exactly 39px,
-  flush, ending at y=485
-- 40px bottom padding, matching the 40px above the header
+`get_metadata` reports the `Table` instance as 799x533, and pixel-sampling the
+rendered frames confirms it is genuinely drawn 8px wider than the start box, not
+merely reported that way:
 
-Column offsets within the 751-wide row, and the yellow band colour, are read off
-the components via the Plugin API during transcription — **not** from Dev Mode,
-per the `NOTES.md` warning about stroked-frame offsets. The yellow gets a
-`:root` token named after its Figma variable, like the existing eight.
+| Frame | left edge ink | right edge ink | box width |
+|---|---|---|---|
+| `57:370` start | x=322–325 | x=1113–1116 | **791** |
+| `58:401` log | x=323–326 | x=1122–1125 | **799** |
+
+An 8px width change between two views of "the same box" is the drift decision in
+"The box's left edge" above, in a louder form. **791 wins**, and the interior
+arithmetic shows why it is what the table was actually designed to:
+
+- At 791 with `padding: 24px`, content is `791 - 48 = 743`
+- The columns sum to exactly that: `200 + 18 + 333 + 18 + 100 + 18 + 56 = 743`
+- 743 is the `Table Row` component's own native width
+
+So the row grid was built for a 791 box, and the frame was later nudged to 799
+without the rows following. Reconciling to 791 restores the design's own
+arithmetic rather than overriding it.
+
+The 799x533 figure is the frame plus its 4px stroke on each side
+(`791 + 8`, `525 + 8`), which is also why `get_metadata` places the header at
+x=24 with width 751 while `get_design_context` reports rows at 743 — precisely
+the stroked-frame offset confusion `NOTES.md` warns about. Neither number is
+wrong; they measure from different edges. Layout geometry uses the frame rect.
+
+### Interior
+
+`padding: 40px 24px`, `gap: 24px` between header and rows — which reproduces the
+observed vertical arithmetic exactly:
+
+```
+40 (pad) + 31 (header) + 24 (gap) + 390 (10 rows) + 40 (pad) = 525
+```
+
+- **Header** — `Overpass Mono Bold 18px`, uppercase, underlined, `--link-ink`,
+  `padding-bottom: 8px` → 23px line + 8 = 31px
+- **Rows** — `Overpass Mono Regular 18px`, uppercase, `--link-ink`,
+  `padding: 8px 0` → 23 + 16 = 39px each, ten of them flush = 390px
+- **Columns** — `display: flex; gap: 18px`, widths `200 / flex:1 0 0 / 100 / 56`
+  for member / activity / date / stats. Header uses the same widths.
+
+### The yellow band is blue
+
+The banded rows are **not** a yellow token. Each highlighted row carries a
+full-bleed child of `background: blue` (`#0000ff`) with
+`mix-blend-mode: difference`, which against the ground yields:
+
+```
+|#d8ccbc − #0000ff| = #d8cc43     predicted
+ #d8cc43                          measured in the rendered frame
+```
+
+Exact to the byte. Transcribe the *mechanism*, not the result: keeping
+`blue` + `difference` means the band stays tied to `--ground`, so it shifts
+correctly if the ground is ever retuned, and it interacts with the film grain the
+way the frame does. **No new colour token is added** — an earlier draft of this
+spec wrongly called for one.
+
+Row 1 is unbanded; banding is every even row.
 
 ### Markup
 
@@ -242,8 +338,12 @@ A real `<table>`: this is tabular data with column headers, so `<thead>` and
 </div>
 ```
 
-Headers are underlined as drawn. Banding is `tbody tr:nth-child(even)` in the
-yellow token, spanning the full row width. Row 1 is unbanded.
+Headers are underlined as drawn. Banding is `tbody tr:nth-child(even) > .band`,
+a full-bleed `position: absolute; inset: 0` child carrying `background: blue;
+mix-blend-mode: difference`, spanning the full row width beneath the cell text.
+It needs to be a child rather than a background on the `<tr>` itself, because the
+blend has to compose against the ground while the text paints above it
+unblended.
 
 `<tbody>` ships empty and is filled by script. Accepted: the table is the one
 part of the site that requires JS, and it is the part that will be genuinely
@@ -287,9 +387,10 @@ left 12, `html { font-size: calc(100vw / 380) }`.
   above the title box. The two extra runners (`r5`, `r6`) and the `d-only` diet
   bowl behave as they do today.
 - **Log view** cannot hold four columns at 366 wide, so each row reflows to two
-  lines — `member` + `stat`, then `activity` + `date` — with the yellow band
-  covering both lines. Row height roughly doubles; the box height and therefore
-  `border-table-m.svg` follow from the final row metrics.
+  lines — `member` + `stat`, then `activity` + `date` — with the band covering
+  both lines. Row height roughly doubles; the box height and therefore
+  `border-table-m.svg` follow from the final row metrics. The 18px table type
+  likely needs to come down; the exact size is settled against a render.
 
 This reflow is the only invented geometry in this design. It stands in until a v2
 phone frame exists, at which point it is re-transcribed like everything else.
@@ -306,13 +407,18 @@ For each of the three pages, at 1440x1024 and 390x1024:
 1. Render headless and compare against the corresponding Figma frame. `index.html`
    must differ from the v1 frame **only** by the wordmark position and the tab
    strip.
-2. Confirm the active tab reads as continuous with the box — no visible line
-   under it, no seam at its edges.
-3. Exercise hover and `:focus-visible` on all three tabs, and tab-key order
+2. Confirm the box's top brush line runs **continuously** across all three tabs
+   at y=286–287 and that the active cell's fill stops at y=285, matching the
+   measured table in "The active tab does not interrupt the box border". A fill
+   that swallows the line means the strip is painting above `.stage::before`.
+3. Confirm the active tab samples ~`#d10000`, not `#e30b19` — that is how you know
+   `mix-blend-mode: color-burn` survived onto the active cell.
+4. Exercise hover and `:focus-visible` on all three tabs, and tab-key order
    through the strip.
-4. On `log-of-gains.html`, confirm ten rows, banding on even rows, headers
-   underlined, and that the rendered box is exactly 791x525 with the brush border
-   registered on its edges.
+5. On `log-of-gains.html`, confirm ten rows, headers underlined, the box exactly
+   791x525 with its brush border registered on its edges, and that a banded row
+   samples **`#d8cc43`** — the difference-blend result. A flat yellow that does not
+   match means the band was hardcoded instead of blended.
 
 The render recipe goes into `NOTES.md` beside the existing `og.html` one.
 
@@ -329,8 +435,10 @@ look arbitrary:
 - That the phone log layout is derived, not transcribed, and what needs redoing
   when a phone frame lands.
 
-Plus the new node IDs, the new colour token's Figma variable, and the fixed
-10-row constraint tying the box height to `border-table-d.svg`.
+Plus the new node IDs, the Overpass Mono addition, the blue-plus-difference band
+(which will otherwise look like a mistake to the next reader), the 799-vs-791
+drift and its resolution, and the fixed 10-row constraint tying the box height to
+`border-table-d.svg`.
 
 ---
 
