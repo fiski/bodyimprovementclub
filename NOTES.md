@@ -289,6 +289,25 @@ would paint over this opaque box without an explicit stacking bump — hence
 No stroke on the phone tagline box — the desktop one has a 1px INSIDE stroke, this
 variant has none.
 
+### Tabs
+
+The strip is 366 wide with 122-wide cells at BOTH breakpoints — the phone content
+column is also 366, and 366 = 3 x 122 — so only `left` changes between them.
+
+The active cell is `--red` filled with a `--ground` label and
+`mix-blend-mode: color-burn`, which is why it samples ~#d10000 rather than
+#e30b19; that is the burn against the ground, not a different red.
+
+The strip does NOT interrupt the box's top border. The tab metaphor might suggest
+the active cell should open into the box, but sampling both v2 frames shows the
+box's top brush line running continuously across all three cells with the active
+fill stopping just above it. This falls out for free: the strip is a `.stage`
+child and `.stage::before` composites every brush export above all children at
+`z-index: 2`. No per-active-state exports, no z-index juggling.
+
+`.stage::before` is split — shared properties on `.stage::before`, the per-view
+layer lists on `.stage--start` / `.stage--log` / `.stage--shop`.
+
 ---
 
 ## og.html
