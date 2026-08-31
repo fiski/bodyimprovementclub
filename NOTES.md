@@ -391,3 +391,30 @@ chrome --headless --disable-gpu --hide-scrollbars \
 python -c "from PIL import Image; i=Image.open('card@2x.png').convert('RGB'); \
            i.resize((1200,630), Image.LANCZOS).save('assets/og-image.png')"
 ```
+
+---
+
+## js/
+
+`activities.js` is placeholder data and nothing else. `log.js` owns the only seam
+that matters: `loadActivities()`. When the Strava integration lands it replaces
+that one function — a fetch of a generated JSON file, most likely, since Strava
+needs OAuth and a token cannot live in a static page. Nothing else in `log.js`
+knows where rows come from.
+
+`ROW_COUNT` is 10 and must stay tied to `border-table-d.svg`: the box is a fixed
+791x525 with one border export, so `pad()` fills a short feed and `slice()`
+truncates a long one. Changing the row count means re-exporting the border.
+
+Both are classic scripts loaded in order, NOT modules — `type="module"` is blocked
+by CORS on `file://`, and both `tools/verify.py` and the `og.html` recipe render
+local files.
+
+`EMPTY`'s fields are a non-breaking space (` `), not `""`. A `<td>` with
+truly empty `textContent` gets no line box in this renderer, so its
+`height: 23rem` collapses (loses the `padding: 8rem 0`, landing at 23rem instead
+of 39rem) and the padded row loses its band — silently, since nothing else about
+it looks wrong until you check a short feed. A plain space is not safe either:
+as the cell's only content it sits at both the start and end of the line, so
+CSS whitespace collapsing can still strip it to nothing. ` ` is exempt from
+that collapsing, so it's the one placeholder that reliably keeps the line box.
