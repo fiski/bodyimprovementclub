@@ -22,7 +22,7 @@ PHONE = (380, 946)
 # Tab-strip geometry (desktop). TAB_CELL_W is under active review against the
 # Figma source and may change (e.g. to 144.128) — everything that samples a
 # tab cell derives its window from these constants so a retune is one edit.
-TAB_STRIP_LEFT = 330      # desktop x of the first cell's sample window
+TAB_STRIP_LEFT = 324      # desktop x of the strip's left edge (settled)
 TAB_CELL_W = 122          # per-cell width — UNDER REVIEW, may change
 TAB_SAMPLE_INSET = 6      # inset from each cell edge when sampling its fill
 
