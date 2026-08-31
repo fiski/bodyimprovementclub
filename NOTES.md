@@ -351,10 +351,13 @@ the drawn 56rem stat column was sized for the 5-character placeholder and is
 too narrow for real values ("31.7 KM", "1:04:20", ~81rem at 18rem Overpass
 Mono) — with `nowrap` in place those values overflowed rightward past the box's
 own interior and out through its brush border rather than wrapping. Activity
-donates ~100rem of its slack (it has the most headroom of any column) to widen
-stat from 56 to 88; the four still sum to the drawn 743. `tools/verify.py log`
-asserts no cell ink appears past the interior's right edge (x=1091) to catch
-this class of regression.
+gives up exactly the 32rem stat needs (351 → 319) and stat gains that same
+32rem (56 → 88), so the four still sum to the drawn 743. Activity was picked
+as the donor because it has real slack even after losing 32rem: its content
+box is 301rem after its own gutter, and its longest value ("gravel loop
+north") measures only ~202rem. `tools/verify.py log` asserts no cell ink
+appears past the interior's right edge (x=1091) to catch this class of
+regression.
 
 ---
 
