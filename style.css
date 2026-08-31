@@ -54,12 +54,17 @@ body {
   width: 380rem;
   height: 946rem;
   transform: translateX(-5rem);
-  z-index: 1;
 }
 
 .stage > * { position: absolute; }
 
-.i { position: absolute; left: var(--x); top: var(--y); display: block; }
+.i {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  display: block;
+  mix-blend-mode: color-burn;
+}
 .flip { transform: scaleY(-1); }
 
 .d-only { display: none; }
