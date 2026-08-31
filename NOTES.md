@@ -72,6 +72,29 @@ Backgrounds do not paint outside their box, so `.stage::before` has to be at lea
 as tall as the lowest brush layer: y=922 on the phone, 969 on desktop. Both
 `.stage` heights clear that, so it simply fills the stage.
 
+### v2 exports
+
+`border-tabs.svg` (370x54) is the tab strip: the `Menu` component with every cell
+fill and label removed, so it is stroke-only. The active cell's red fill is CSS,
+not baked in — otherwise it could not move between pages.
+
+`border-table-d.svg` (795x529) is the log/shop box. The `Table` component was
+drawn 799x533 but its row grid sums to 743, the interior a 791 box implies
+(`791 - 2*24` padding), so the component was resized to 791x525 to match the grid
+it was built for. Both exports carry the usual 2px brush overflow per side.
+
+The `Menu` component's middle cell (`log of gains`) was found HUG-sized, auto-
+fitting its label to 144.13px while its siblings stayed FIXED at 122px — a drift
+from the intended three-equal-122px strip (366 wide, flush with the 366px phone
+content box). It has been pinned to FIXED 122 to match its siblings. If a future
+edit sets it back to HUG, the cell will silently widen to fit whatever label is
+in it, `Menu` will stop being 366 wide, and `border-tabs.svg` will no longer
+align with the tab strip it is composited over — re-export is not enough, the
+component's sizing mode has to stay FIXED. Note the label itself never fit the
+122px cell's padding even before this (`log of gains` ink is ~111px in an
+81.9px content box after the 20.064px horizontal padding), so the CSS for this
+strip drops horizontal padding on the tab labels and centers them instead.
+
 ### Palette
 
 The eight tokens on `:root` mirror, one-for-one, the "Color" variable collection
