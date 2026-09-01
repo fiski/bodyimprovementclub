@@ -246,14 +246,26 @@ def check_phone(r):
                 edges, want)
 
         # Guard: the two checks above only make sense if the render actually
-        # achieved PHONE_SCALE px/rem. Assert that directly against the box's
-        # left edge so a future Chrome clamping change fails loudly here,
-        # naming PHONE, rather than silently mis-measuring everything below.
-        r.check(edges is not None and abs(edges[0] - want[0]) <= 3,
+        # achieved PHONE_SCALE px/rem. Anchor this on the box's rendered
+        # WIDTH (366rem), not either edge: an edge sits close to the
+        # translateX origin (the left edge is only 7rem from it), so a
+        # proportional scale error barely moves it -- a 3% scale error (1.942
+        # vs 2.0 px/rem) shifts the left edge by under half a px, comfortably
+        # inside a few-px tolerance, and would pass while every downstream
+        # measurement is silently wrong. The 366rem span moves ~22px for that
+        # same 3% error, and is independent of STAGE_SHIFT_X_REM entirely, so
+        # a wrong shift constant can't mask a wrong scale either. The ±3px
+        # tolerance here is deliberately tighter than the box-span check's
+        # 4 * PHONE_SCALE (roughly 0.4% of the 732px span vs that check's
+        # looser position tolerance) -- this check exists to catch scale
+        # drift specifically, so it holds a stricter bar on purpose.
+        want_span = 366 * PHONE_SCALE
+        span = edges[1] - edges[0] if edges else None
+        r.check(span is not None and abs(span - want_span) <= 3,
                 f"phone {page}: render achieves {PHONE_SCALE}px/rem "
-                f"(box left edge at (12{STAGE_SHIFT_X_REM:+}rem) == {want[0]}px) -- "
-                "if this fails, Chrome's window sizing has changed; re-measure PHONE",
-                edges[0] if edges else None, want[0])
+                f"(box spans 366rem == {want_span}px) -- if this fails, "
+                "Chrome's window sizing has changed; re-measure PHONE",
+                span, want_span)
 
         # The strip's cells are 122rem wide here too, so cell 2 starts at
         # 12+244rem.
