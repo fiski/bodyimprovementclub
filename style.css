@@ -379,8 +379,12 @@ body {
 /* Phone-only: the log table has no phone frame in Figma to transcribe, so this
    reflow is invented. Four 18px columns do not fit the 366-wide box, so each
    row becomes two lines -- member+stat, then activity+date -- and the header
-   is dropped (a four-column header cannot honestly label a two-line row;
-   scope="col" in the markup still serves assistive tech). See NOTES.md. */
+   is hidden (`display: none` removes it from the accessibility tree too, so
+   this is hidden from ALL users at this width, not just sighted ones -- a
+   four-column header cannot honestly label a two-line row for anyone). The
+   markup keeps <thead> and scope="col" because the desktop layout still
+   needs them, not because either does anything at this width. See
+   NOTES.md. */
 @media (max-width: 767px) {
 
   .box--table { height: 640rem; }

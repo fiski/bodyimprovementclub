@@ -371,8 +371,13 @@ regression.
 There is no v2 phone frame for the log table. Four 18px columns do not fit the
 366-wide phone box, so each row reflows to two lines -- member + stat on the
 first, activity + date on the second -- at 15px/20px, and the header is
-dropped: a four-column header cannot honestly label a two-line row.
-`scope="col"` in the markup still serves assistive tech.
+hidden with `display: none`. That removes it from the accessibility tree in
+every major browser too, so this is hidden from ALL users at phone width, not
+just sighted ones -- a four-column header cannot honestly label a two-line
+row for anyone, and the reflowed rows are self-describing by position and
+weight. The markup still keeps `<thead>` and `scope="col"`, but only because
+the desktop layout needs them; neither does anything for a phone-width user,
+assistive tech included.
 
 Two phone borders exist, not one, because the two phone boxes are different
 heights: `border-box-m.svg` (370x529) is `shop.html`'s unchanged 366x525

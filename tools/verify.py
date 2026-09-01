@@ -283,6 +283,60 @@ def check_phone(r):
         r.check(redness(seam) > 25,
                 f"phone {page}: strip/box seam inked at y=286rem", hexof(seam), "reddish")
 
+        if page == "log-of-gains.html":
+            # The phone reflow moved the band from the desktop's per-cell
+            # background to a row-level ::after -- a positioned pseudo-
+            # element, the same construct class as the bug check_log guards
+            # against (an inverted #7f1010 reading as #7f10ef). Mirror
+            # check_log's two assertions here so the riskier mechanism gets
+            # the same coverage as the proven one.
+            #
+            # Box interior: box top 286rem + 40rem top padding = row 1 at
+            # y=326rem; each row is an 8rem pad + two 20rem lines + an 8rem
+            # pad = 56rem pitch; banded rows are nth-child(even), i.e. 0-
+            # indexed i in {1,3,5,7,9}.
+            ROWS_TOP = 286 + 40
+            ROW_PITCH = 56
+            INTERIOR_LEFT = 12 + 24  # box left + left padding
+
+            for i in (1, 3, 5, 7, 9):
+                row_top = ROWS_TOP + i * ROW_PITCH
+
+                # Sample inside the row's own top padding (8rem): it never
+                # carries glyph content regardless of row text, so this reads
+                # the band colour clear of any text -- the difference blend
+                # must land on #d8cc43.
+                bx0 = (INTERIOR_LEFT + STAGE_SHIFT_X_REM) * PHONE_SCALE
+                bx1 = (INTERIOR_LEFT + 280 + STAGE_SHIFT_X_REM) * PHONE_SCALE
+                by0 = (row_top + 2) * PHONE_SCALE
+                by1 = (row_top + 6) * PHONE_SCALE
+                band = median(im, bx0, bx1, by0, by1)
+                r.check(near(band, (216, 204, 67), tol=10),
+                        f"phone log-of-gains.html: row {i + 1} banded #d8cc43",
+                        hexof(band), "#d8cc43")
+
+                # The band must paint BENEATH the member-column text (the
+                # row's first line): an inverted #7f1010 reads #7f10ef, and
+                # B=16 vs B=239 separates them cleanly. B alone is not enough
+                # here, though: this mechanism is a positioned ::after, so a
+                # missing/wrong z-index doesn't recolour the glyphs the way
+                # the desktop mix-blend-mode bug does -- it paints the whole
+                # opaque #d8cc43 band ON TOP, occluding the text entirely,
+                # and #d8cc43's own B=67 would slip past a bare `< 100` (this
+                # was verified empirically: measured (127,16,15) sum=158 for
+                # real ink vs (216,204,67) sum=487 for an occluding band, so
+                # a sum cap also catches full occlusion that channel-only
+                # would miss).
+                tx0 = (INTERIOR_LEFT + STAGE_SHIFT_X_REM) * PHONE_SCALE
+                tx1 = (INTERIOR_LEFT + 150 + STAGE_SHIFT_X_REM) * PHONE_SCALE
+                ty0 = (row_top + 10) * PHONE_SCALE
+                ty1 = (row_top + 26) * PHONE_SCALE
+                ink = min((im.getpixel((x, y)) for y in range(ty0, ty1)
+                           for x in range(tx0, tx1)), key=sum)
+                r.check(ink[2] < 100 and sum(ink) < 300,
+                        f"phone log-of-gains.html: row {i + 1} text is not inverted/occluded by the band",
+                        hexof(ink), "#7f1010-ish")
+
 
 CHECKS = {
     "index": check_index,
