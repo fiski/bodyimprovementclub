@@ -2,7 +2,12 @@
 """Render each page headless and assert measured pixel facts about it.
 
 Every expected number here is a raw Figma pixel, which is also a CSS px at the
-1440x1024 and 380x946 render sizes, because .stage is scaled so 1rem == 1px.
+1440x1024 desktop render size, because .stage is scaled so 1rem == 1px there.
+
+The phone render is different: Chrome (Windows) clamps windows to a ~500px
+minimum and subtracts 22px of chrome, so a naive --window-size=380 yields a
+512px viewport and silently renders the phone stage zoomed and clipped rather
+than at 1rem == 1px. See PHONE and PHONE_SCALE below.
 """
 import argparse
 import pathlib
@@ -17,13 +22,38 @@ CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 DESKTOP = (1440, 1024)
-PHONE = (380, 946)
 
-# Tab-strip geometry (desktop). TAB_CELL_W is under active review against the
-# Figma source and may change (e.g. to 144.128) — everything that samples a
-# tab cell derives its window from these constants so a retune is one edit.
+# The phone render size was empirically measured, not assumed. --window-size
+# is unreliable here in two different ways depending on how you probe it:
+#   - via --dump-dom, Chrome reports a *reduced* innerWidth (e.g. request 380
+#     comes back as 512, request 760 comes back as 738) -- some ~22px of
+#     window chrome being subtracted.
+#   - but via the --screenshot flag this codebase actually uses, that
+#     reduction does NOT apply to layout/media-query evaluation: the raster
+#     is produced at the *requested* width taken literally. So requesting
+#     782 (380 + 22, to "net" 760 after the dump-dom-measured subtraction)
+#     instead lands on 782 literal CSS px -- which is >= the 768 breakpoint,
+#     silently flipping the page into its *desktop* layout while every mobile
+#     rem coordinate is still what gets asserted against, producing a
+#     wholesale mismatch that looks like "everything is wrong" rather than a
+#     clean off-by-some-scale error.
+#   Requesting exactly 760 (2 x the 380rem stage width, comfortably under
+#   768) was verified with painted marker divs at known rem coordinates: the
+#   screenshot places them at their rem value x 2 to within a couple of px,
+#   with no clipping and no crossover into the desktop rules. Height just
+#   needs headroom past the stage's 1018rem x 2 = 2036px bottom.
+#   If this ever needs re-measuring: paint absolutely-positioned marker divs
+#   at known rem coordinates into a copy of index.html, screenshot it at a
+#   candidate --window-size, and look for a request where marker positions
+#   land at rem x SCALE -- not some other size where they silently shift to
+#   desktop coordinates or a fractional scale.
+PHONE = (760, 2040)
+PHONE_SCALE = 2
+
+# Tab-strip geometry (desktop). Everything that samples a tab cell derives
+# its window from these constants so a retune is one edit.
 TAB_STRIP_LEFT = 324      # desktop x of the strip's left edge (settled)
-TAB_CELL_W = 122          # per-cell width — UNDER REVIEW, may change
+TAB_CELL_W = 122          # per-cell width (settled)
 TAB_SAMPLE_INSET = 6      # inset from each cell edge when sampling its fill
 
 # Content box's top brush line (desktop). A hand-drawn brush stroke wobbles a
@@ -195,13 +225,51 @@ def check_shop(r):
 
 
 def check_phone(r):
+    # Expectations are written in rem (the page's own units) and scaled to px
+    # at the point of use, since PHONE renders at exactly PHONE_SCALE px/rem.
+    #
+    # .stage carries `transform: translateX(-5rem)` on phone (unlike desktop,
+    # where it's none), which shifts every x-coordinate in the render left by
+    # 5rem relative to the box's own left/width numbers. y is untouched.
+    STAGE_SHIFT_X_REM = -5
+
     for page in ("index.html", "log-of-gains.html", "shop.html"):
         im = shot(page, PHONE)
-        runs = ink_runs(im, 300, 0, 380)
+
+        runs = ink_runs(im, 300 * PHONE_SCALE, 0, PHONE[0])
         edges = (runs[0][0], runs[-1][-1]) if len(runs) >= 2 else None
-        r.check(edges is not None and abs(edges[0] - 12) <= 4
-                and abs(edges[1] - 378) <= 4,
-                f"phone {page}: box spans x=12..378", edges, (12, 378))
+        want = ((12 + STAGE_SHIFT_X_REM) * PHONE_SCALE,
+                (378 + STAGE_SHIFT_X_REM) * PHONE_SCALE)
+        r.check(edges is not None and abs(edges[0] - want[0]) <= 4 * PHONE_SCALE
+                and abs(edges[1] - want[1]) <= 4 * PHONE_SCALE,
+                f"phone {page}: box spans x=12..378rem (shifted {STAGE_SHIFT_X_REM}rem by .stage)",
+                edges, want)
+
+        # Guard: the two checks above only make sense if the render actually
+        # achieved PHONE_SCALE px/rem. Assert that directly against the box's
+        # left edge so a future Chrome clamping change fails loudly here,
+        # naming PHONE, rather than silently mis-measuring everything below.
+        r.check(edges is not None and abs(edges[0] - want[0]) <= 3,
+                f"phone {page}: render achieves {PHONE_SCALE}px/rem "
+                f"(box left edge at (12{STAGE_SHIFT_X_REM:+}rem) == {want[0]}px) -- "
+                "if this fails, Chrome's window sizing has changed; re-measure PHONE",
+                edges[0] if edges else None, want[0])
+
+        # The strip's cells are 122rem wide here too, so cell 2 starts at
+        # 12+244rem.
+        strip = ink_runs(im, 260 * PHONE_SCALE, 0, PHONE[0])
+        r.check(len(strip) >= 4,
+                f"phone {page}: strip shows three cells at y=260rem", strip, ">=4 runs")
+
+        # The strip sits ON the box: its bottom edge is the box's top edge.
+        # The border artwork's stroke anti-aliases across this boundary, so a
+        # narrow 2rem band can land squarely on a thin (near-empty) row of it;
+        # scan a slightly wider 4rem band centred on the seam so a single such
+        # row can't sink the median.
+        seam = median(im, 40 * PHONE_SCALE, 340 * PHONE_SCALE,
+                      285 * PHONE_SCALE, 289 * PHONE_SCALE)
+        r.check(redness(seam) > 25,
+                f"phone {page}: strip/box seam inked at y=286rem", hexof(seam), "reddish")
 
 
 CHECKS = {
