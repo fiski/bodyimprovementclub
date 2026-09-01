@@ -298,7 +298,7 @@ body {
 }
 
 .box--table {
-  left: 12rem; top: 286rem; width: 366rem; height: 525rem;
+  left: 12rem; top: 286rem; width: 366rem; height: 640rem;
   padding: 40rem 24rem;
 }
 
@@ -385,9 +385,7 @@ body {
    markup keeps <thead> and scope="col" because the desktop layout still
    needs them, not because either does anything at this width. See
    NOTES.md. */
-@media (max-width: 767px) {
-
-  .box--table { height: 640rem; }
+@media (max-width: 767.98px) {
 
   .log,
   .log thead,
@@ -496,7 +494,7 @@ body {
       795rem 529rem;
   }
 
-  .box--table { left: 324rem; width: 791rem; }
+  .box--table { left: 324rem; width: 791rem; height: 525rem; }
 
   .stage--log::before {
     background-image:

@@ -1,7 +1,8 @@
 # Body Improvement Club — implementation notes
 
-Reference for `index.html`, `style.css` and `og.html`. The source files carry no
-comments; everything that explains *why* they look the way they do lives here.
+Reference for `index.html`, `log-of-gains.html`, `shop.html`, `og.html`,
+`style.css`, `js/` and `tools/`. The source files carry no comments; everything
+that explains *why* they look the way they do lives here.
 
 Figma file: `BgBx1W0MizlqEKMRBrGjdk`
 
@@ -14,10 +15,10 @@ Figma file: `BgBx1W0MizlqEKMRBrGjdk`
 
 ### Link preview
 
-`og:image` MUST be absolute — scrapers do not resolve relative URLs, and GitHub
-Pages serves this project site from a `/bodyimprovementclub` subpath, so a
-root-relative path would 404. Update both the URLs in the head and the Pages
-settings together if the site ever moves to a custom domain.
+`og:image` MUST be absolute — scrapers do not resolve relative URLs. The site is
+served from `bodyimprovement.club`, so every `<head>` carries that absolute
+origin; there are now three of them (`index.html`, `log-of-gains.html`,
+`shop.html`), so update all of them together if the domain ever changes again.
 
 `assets/og-image.png` is rendered from `og.html`; see that file to regenerate.
 
@@ -69,7 +70,7 @@ the difference between the export's bounds and the frame rect: e.g. the phone
 title box is 366x171 and its export 370x175, so `2rem`.
 
 Backgrounds do not paint outside their box, so `.stage::before` has to be at least
-as tall as the lowest brush layer: y=922 on the phone, 969 on desktop. Both
+as tall as the lowest brush layer: y=994 on the phone, 969 on desktop. Both
 `.stage` heights clear that, so it simply fills the stage.
 
 ### v2 exports
@@ -189,10 +190,16 @@ not just the stage, so the texture reads on any screen size.
 
 ### .stage
 
-The phone box is the scroll height, not the height of the Figma frame: 946 = the
-inked extent's bottom edge at 922 — the Strava button's brush, 2px below its 920
-rect edge — plus a 24px bottom margin. The top margin needs no help; the
-composition's own empty band above the logo at y=54 supplies it.
+The phone box is the scroll height, not the height of the Figma frame: 1018 = the
+inked extent's bottom edge at 994 — the Strava button's brush, 2px below
+`.box--link`'s rect edge at 992 (864 top + 128 height) — plus a 24px bottom
+margin. The top margin needs no help; the composition's own empty band above the
+logo at y=54 supplies it.
+
+This height is sized for the START view alone and reused as-is for the log and
+shop pages, so that the tab strip never shifts between pages; on those two
+pages the fixed 1018rem `.stage` scrolls past roughly 90rem and 205rem of empty
+ground respectively, below their shorter compositions.
 
 The width is the 380 the scale was fitted to, NOT the canvas's 390: at 390 the
 stage is wider than the viewport by its empty right-hand gutter, and an overflow
@@ -311,12 +318,12 @@ layer lists on `.stage--start` / `.stage--log` / `.stage--shop`.
 ### The log table
 
 The banded rows are BLUE, not yellow: each even-row cell blends a `blue` layer
-against a `var(--ground)` layer via `background-blend-mode: difference`, exactly
-as the Figma component does. Against the ground that computes to
-`|#d8ccbc - #0000ff| = #d8cc43`, which is what the frames sample. Keeping the
-mechanism rather than the result means the band tracks `--ground` if the ground is
-ever retuned, and it grains the way the frame does. Do not "simplify" it to a
-yellow token.
+against a `var(--ground)` layer via `background-blend-mode: difference`, a
+deliberate substitute for the Figma component's own mechanism rather than a
+copy of it. Against the ground that computes to `|#d8ccbc - #0000ff| = #d8cc43`,
+which is what the frames sample. Keeping the mechanism rather than the result
+means the band tracks `--ground` if the ground is ever retuned, and it records
+the intent. Do not "simplify" it to a yellow token.
 
 The band is painted as the cell's own `background-image` (two stacked
 `linear-gradient(solid, solid)` layers blended with `background-blend-mode`),
@@ -506,3 +513,9 @@ markup — worth knowing before re-measuring PHONE on a different machine.
 
 What it deliberately cannot check: focus-visible states and keyboard order, which
 are a manual pass in a real browser.
+
+The harness needs a live network connection to Google Fonts: the log table's
+column widths were tuned against Overpass Mono's real glyph advance widths, and
+a run offline (or blocked) falls back to a different font with different
+metrics, which shifts sampled x-coordinates and produces failures that look
+like layout bugs but are actually a missing font.

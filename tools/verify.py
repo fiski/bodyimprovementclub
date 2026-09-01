@@ -160,6 +160,17 @@ def check_active_tab(r, im, page, cell):
     fill = median(im, x0, x1, 250, 284)
     r.check(near(fill, (209, 0, 0), tol=12),
             f"{page}: active tab {cell} is colour-burned red", hexof(fill), "#d10000")
+    # Guard: nothing else here confirms the fill actually STOPS above the
+    # box's top line. If `.tabs`' 50rem height ever drifted, the fill would
+    # run past y=286 and check_shell's "top brush line present" checks would
+    # then pass on the fill itself rather than the line -- a false pass on
+    # the very check meant to catch this. Sample just below the line (the
+    # line itself lives in BOX_TOP..BOX_TOP+BOX_LINE_SCAN, i.e. 286-288) and
+    # confirm it reads ground, not fill.
+    below_line = median(im, x0, x1, 291, 295)
+    r.check(near(below_line, (214, 202, 188), tol=12),
+            f"{page}: active tab {cell} fill stops above the box's top line",
+            hexof(below_line), "ground")
     for other in range(3):
         if other == cell:
             continue
@@ -273,8 +284,20 @@ def check_phone(r):
                 span, want_span)
 
         # The strip's cells are 122rem wide here too, so cell 2 starts at
-        # 12+244rem.
+        # 12+244rem. A run count alone is not enough: label glyphs on the
+        # inactive tabs can themselves produce >=4 ink runs on this scanline,
+        # so a strip rendered far too narrow (or too wide) could still pass
+        # a bare count check. Mirror the box-span check above and assert the
+        # strip's actual extent instead; keep the count as a secondary guard.
         strip = ink_runs(im, 260 * PHONE_SCALE, 0, PHONE[0])
+        strip_edges = (strip[0][0], strip[-1][-1]) if strip else None
+        want_strip = ((12 + STAGE_SHIFT_X_REM) * PHONE_SCALE,
+                      (378 + STAGE_SHIFT_X_REM) * PHONE_SCALE)
+        r.check(strip_edges is not None
+                and abs(strip_edges[0] - want_strip[0]) <= 4 * PHONE_SCALE
+                and abs(strip_edges[1] - want_strip[1]) <= 4 * PHONE_SCALE,
+                f"phone {page}: strip spans x=12..378rem (shifted {STAGE_SHIFT_X_REM}rem by .stage)",
+                strip_edges, want_strip)
         r.check(len(strip) >= 4,
                 f"phone {page}: strip shows three cells at y=260rem", strip, ">=4 runs")
 

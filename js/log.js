@@ -4,6 +4,11 @@ const ROW_COUNT = 10;
 const COLUMNS = ["member", "activity", "date", "stat"];
 const EMPTY = { member: "", activity: "", date: "", stat: "" };
 
+// Contract: must resolve to activities ordered newest-first. `pad()` below
+// takes the first ROW_COUNT rows on the assumption the feed is already in
+// that order -- it does not sort. ACTIVITIES (placeholder data) satisfies
+// this by construction; a real Strava response may not, and must be sorted
+// before being returned here if so.
 async function loadActivities() {
   return ACTIVITIES;
 }
