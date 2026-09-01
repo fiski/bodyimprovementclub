@@ -366,6 +366,55 @@ north") measures only ~202rem. `tools/verify.py log` asserts no cell ink
 appears past the interior's right edge (x=1091) to catch this class of
 regression.
 
+### The phone log table is DERIVED, not transcribed
+
+There is no v2 phone frame for the log table. Four 18px columns do not fit the
+366-wide phone box, so each row reflows to two lines -- member + stat on the
+first, activity + date on the second -- at 15px/20px, and the header is
+dropped: a four-column header cannot honestly label a two-line row.
+`scope="col"` in the markup still serves assistive tech.
+
+Two phone borders exist, not one, because the two phone boxes are different
+heights: `border-box-m.svg` (370x529) is `shop.html`'s unchanged 366x525
+centred-copy box; `border-table-m.svg` (370x644) is `log-of-gains.html`'s
+reflowed, taller box. On desktop the two pages still share one export
+(`border-table-d.svg`) because both boxes are 791x525 there -- only the phone
+layout diverges.
+
+Both were produced by the same recipe as the desktop `border-table-d.svg`
+(clone `Table` (`59:56`) via `createInstance()`, `detachInstance()` the clone
+itself, remove its children, resize, export, delete the clone) -- NOT by
+rescaling `border-table-d.svg`. Squeezing 795 down to 370 is a 0.465 horizontal
+compression that a hand-drawn brush stroke does not survive: the bristles
+visibly bunch up. Re-exporting at the real phone width keeps the stroke
+density correct.
+
+`.box--table`'s phone height (640rem) was measured, not computed from
+`8 + 10x56 + 8`-style arithmetic: a script rendered the page, read
+`getBoundingClientRect()` on the last row and the box, and converted back to
+rem via the root font-size. The arithmetic prediction (`40 + 10x56 + 40 =
+640`) landed within 0.05rem of the measured value, but the measurement is
+what was kept -- grid line-box rounding at a fractional rem can move this,
+and only a render proves it settled.
+
+On the phone the band moves from a per-cell `background-image` to the row's
+own `::after`, because the rows are `display: grid` there and
+`position: relative` + `isolation: isolate` on a grid container is reliable
+where `position: relative` is not on a table row (see the desktop notes above
+on why a `::before`/`z-index` approach fails). The row `::after` still uses
+the same self-contained two-layer `background-blend-mode: difference` trick
+as the desktop per-cell band (`linear-gradient(blue,blue)` blended against
+`linear-gradient(var(--ground),var(--ground))`) rather than `background: blue;
+mix-blend-mode: difference` blending against whatever happens to be painted
+behind the row (the grain texture, not a flat ground) -- the two-layer form is
+correct regardless of backdrop, and `column-gap` between the member/activity
+and stat/date columns is safe because the row's own `::after` covers the
+gap along with the rest of the row's box.
+
+When a phone frame for the log table is eventually drawn in Figma, all of
+this -- the two-line layout, the 640rem box height, both border exports --
+should be re-transcribed and re-exported rather than assumed still correct.
+
 ---
 
 ## og.html

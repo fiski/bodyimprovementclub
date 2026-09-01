@@ -373,7 +373,78 @@ body {
     10rem 284rem;
   background-size:
     370rem  54rem,
-    370rem 529rem;
+    370rem 644rem;
+}
+
+/* Phone-only: the log table has no phone frame in Figma to transcribe, so this
+   reflow is invented. Four 18px columns do not fit the 366-wide box, so each
+   row becomes two lines -- member+stat, then activity+date -- and the header
+   is dropped (a four-column header cannot honestly label a two-line row;
+   scope="col" in the markup still serves assistive tech). See NOTES.md. */
+@media (max-width: 767px) {
+
+  .box--table { height: 640rem; }
+
+  .log,
+  .log thead,
+  .log tbody,
+  .log tr { display: block; width: 100%; }
+
+  .log colgroup { display: none; }
+
+  .log thead { display: none; }
+
+  .log tbody tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "member stat"
+      "activity date";
+    column-gap: 12rem;
+    padding: 8rem 0;
+    position: relative;
+    isolation: isolate;
+  }
+
+  .log tbody td {
+    display: block;
+    height: auto;
+    padding: 0;
+    font-size: 15rem;
+    line-height: 20rem;
+    min-width: 0;
+  }
+
+  .log tbody td:nth-child(1) { grid-area: member;   font-weight: 700; }
+  .log tbody td:nth-child(2) { grid-area: activity; }
+  .log tbody td:nth-child(3) { grid-area: date;     text-align: right; }
+  .log tbody td:nth-child(4) { grid-area: stat;     text-align: right; font-weight: 700; }
+
+  .log th:not(:last-child),
+  .log td:not(:last-child) { padding-right: 0; }
+
+  /* The band moves from a per-cell background to the row itself: the rows
+     are display:grid here, and position:relative + isolation:isolate on a
+     grid container is reliable in a way it is not on a table row. Painted
+     via two background layers blended on the ::after itself (not
+     mix-blend-mode against whatever backdrop happens to be behind the row),
+     the same self-contained technique already used per-cell on desktop --
+     so it is correct regardless of grid gaps or what paints behind the row. */
+  .log tbody tr:nth-child(even) td {
+    background-image: none;
+  }
+
+  .log tbody tr:nth-child(even)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      linear-gradient(blue, blue),
+      linear-gradient(var(--ground), var(--ground));
+    background-blend-mode: difference;
+    pointer-events: none;
+  }
 }
 
 @media (min-width: 768px) {
