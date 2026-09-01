@@ -208,6 +208,11 @@ def check_log(r):
         top = 381 + i * 39
         ink = min((im.getpixel((x, y)) for y in range(top + 4, top + 31)
                    for x in range(348, 500)), key=sum)
+        # No `sum(ink) < 300` term here (unlike the phone check below): this band is
+        # the cell's own `background-image`, and an element's own background always
+        # paints beneath its own text, so full occlusion can't happen -- only
+        # recolouring (#7f10ef) is reachable. Reconsider if this ever moves off
+        # `background-image`.
         r.check(ink[2] < 100,
                 f"log: row {i + 1} text is not inverted by the band", hexof(ink), "#7f1010-ish")
 

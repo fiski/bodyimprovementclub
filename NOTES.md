@@ -476,3 +476,33 @@ blank field. A truly empty `<td>` would otherwise lose its line box and its
 39rem row height — see the `.log tbody td:empty::after` rule in `style.css`'s
 `### The log table` section, which is what actually keeps a padded (or
 blank-field) row banded.
+
+---
+
+## tools/verify.py
+
+Renders each page in headless Chrome and asserts measured pixel facts against the
+Figma frames — the same sampling that settled the v2 design questions, kept
+runnable so a change that breaks the composition fails loudly.
+
+```sh
+python tools/verify.py            # every suite
+python tools/verify.py log phone  # a subset
+```
+
+Every expected number in it is a raw Figma pixel, which is also a CSS px at the
+render sizes, because `.stage` is scaled so `1rem` == `1px`. The `CHROME` path at
+the top is a Windows absolute path; change it to suit the machine.
+
+The phone suite renders at `PHONE = (760, 2040)`, not the stage's nominal
+380x1018: Chrome on Windows clamps a headless window's requested width to
+roughly 500px, so asking for 380 silently produced a 512px viewport and
+rendered the phone stage zoomed and clipped — every phone measurement was
+wrong until that clamp was found. 760 is exactly 2x the 380rem stage width and
+still comfortably under the 768px desktop breakpoint, so `PHONE_SCALE = 2` and
+every phone expectation in the file is just its rem value doubled. That trap
+cost real debugging time before it was traced to the window size, not the
+markup — worth knowing before re-measuring PHONE on a different machine.
+
+What it deliberately cannot check: focus-visible states and keyboard order, which
+are a manual pass in a real browser.
