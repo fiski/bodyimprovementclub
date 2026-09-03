@@ -266,12 +266,33 @@ body {
 .j3 { --x: 248rem; --y: 4rem;  }
 .j4 { --x: 312rem; --y: 37rem; }
 
+/* The shop panel is one bordered box (border-box-m.svg / border-table-d.svg,
+   286rem -> 811rem). The tee takes its upper 380rem, the copy the 145rem
+   below it -- so both sit inside the single border the stage already paints,
+   rather than asking for a second one. */
+.box--tee {
+  left: 12rem; top: 286rem; width: 366rem; height: 380rem;
+  padding: 12rem;
+}
+
+/* The iframe fills the box: the square canvas and the controls panel beside it
+   are laid out inside tshirt-controls.html, so squareness is that document's
+   job, not this one's. Transparent background lets the page's paper and film
+   grain read straight through. */
+.tee-frame {
+  display: block;
+  border: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
 .box--copy {
-  left: 12rem; top: 286rem; width: 366rem; height: 525rem;
+  left: 12rem; top: 666rem; width: 366rem; height: 145rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40rem 24rem;
+  padding: 24rem;
 }
 
 .box--copy p {
@@ -528,7 +549,11 @@ body {
       351rem 132rem;
   }
 
-  .box--copy { left: 324rem; width: 791rem; }
+  /* Desktop stands the panel up as a full column beside the tee, and it needs
+     ~365px -- taller than the 380rem the phone layout gives. Borrow the 30rem
+     from the copy, which is a single line at this width instead of three. */
+  .box--tee  { left: 324rem; width: 791rem; height: 410rem; }
+  .box--copy { left: 324rem; top: 696rem; width: 791rem; height: 115rem; }
 
   .stage--shop::before {
     background-image:
