@@ -340,17 +340,60 @@ body {
    blank field alike — keeps a line box and its full 39rem row height. */
 .log tbody td:empty::after { content: "\00a0"; }
 
+/* The band differences blue against the TEXTURED paper, not against a flat
+   --ground swatch: in Figma the row's blue fill blends with the composition
+   beneath it, which is Film_Grain over the ground, so the grain runs through
+   the band at full strength. Differencing against a flat swatch produces the
+   right average colour (#d8cc43) but a dead-flat slab -- measured std 0.00
+   across the band against 5.65 on the ground beside it -- and that flatness,
+   not the hue, is what reads wrong against the frame.
+
+   The paper is rebuilt inside the cell's own background stack rather than
+   blended against the real .grain overlay behind it, using the same
+   reconstruction .tagline already does: the grain image, an 80%-opaque ground
+   wash over it (background layers have no per-layer opacity; the wash is how
+   .grain's `opacity: 0.20` is expressed here), then blue differenced over the
+   pair. `background-attachment: fixed` + the cover-equivalent size and centre
+   anchor those layers to the VIEWPORT exactly as .grain's
+   `position: fixed` + `object-fit: cover` does, so the reconstructed grain
+   lands on the same pixels as the real one and the texture runs continuously
+   across a band edge.
+
+   Doing it in the cell's own background is also what keeps this working at
+   both breakpoints. The obvious alternative -- `mix-blend-mode: difference`,
+   blending against the real backdrop -- inverts the cell's own text
+   (#7f1010 reads #b2c806, measured), and on phone .stage carries a transform,
+   which makes it a stacking context and therefore an isolated group: a
+   blend inside it cannot see .grain at all. A background stack has no such
+   dependency on what is painted behind the element. */
 .log tbody tr:nth-child(even) td {
+  background-color: var(--ground);
   background-image:
     linear-gradient(blue, blue),
-    linear-gradient(var(--ground), var(--ground));
-  background-blend-mode: difference;
+    linear-gradient(color-mix(in srgb, var(--ground) 80%, transparent) 0 100%),
+    url("assets/film-grain.webp");
+  background-blend-mode: difference, normal, normal;
+  background-size: auto, auto, max(100vw, 140.625vh) auto;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 .log .c-member   { width: 218rem; }
 .log .c-activity { width: 319rem; }
 .log .c-date     { width: 118rem; }
 .log .c-stat     { width:  88rem; }
+
+/* The stat column is RIGHT-aligned, unlike the other three. The column is
+   32rem wider than the drawn 56rem (see NOTES.md -- real values need the
+   room), and left-aligning it inside that widened column is what left the
+   drawn row band running ~32rem past the last glyph: in the Figma frame the
+   band's right edge and the stat's last glyph both land on x=743. Right
+   alignment restores that, and puts "INDEX" back on the drawn 689..743 for
+   free. It does NOT rescue a value wider than the column -- an overflowing
+   line still spills rightward whatever the alignment -- so the column staying
+   wide enough for the longest real stat is still load-bearing. */
+.log th:last-child,
+.log td:last-child { text-align: right; }
 
 .log th:not(:last-child),
 .log td:not(:last-child) { padding-right: 18rem; }
@@ -441,10 +484,15 @@ body {
     position: absolute;
     inset: 0;
     z-index: -1;
+    background-color: var(--ground);
     background-image:
       linear-gradient(blue, blue),
-      linear-gradient(var(--ground), var(--ground));
-    background-blend-mode: difference;
+      linear-gradient(color-mix(in srgb, var(--ground) 80%, transparent) 0 100%),
+      url("assets/film-grain.webp");
+    background-blend-mode: difference, normal, normal;
+    background-size: auto, auto, max(100vw, 140.625vh) auto;
+    background-position: center;
+    background-attachment: fixed;
     pointer-events: none;
   }
 }
