@@ -15,6 +15,7 @@
 
   --font-display: "Bungee Shade", cursive;
   --font-mono:    "Major Mono Display", monospace;
+  --font-ui:      "Overpass Mono", monospace;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -52,7 +53,7 @@ body {
   position: relative;
   flex: none;
   width: 380rem;
-  height: 946rem;
+  height: 1018rem;
   transform: translateX(-5rem);
 }
 
@@ -76,19 +77,25 @@ body {
   z-index: 2;
   pointer-events: none;
   background-repeat: no-repeat;
+}
+
+.stage--start::before {
   background-image:
+    url("assets/borders/border-tabs.svg"),
     url("assets/borders/border-title-m.svg"),
     url("assets/borders/border-runners-m.svg"),
     url("assets/borders/border-exercises-m.svg"),
     url("assets/borders/border-panel-m.svg"),
     url("assets/borders/border-link-m.svg");
   background-position:
-    10rem 212rem,
-    11rem 384rem,
-    11rem 707rem,
-    10rem 467rem,
-    10rem 790rem;
+    10rem 234rem,
+    10rem 284rem,
+    11rem 456rem,
+    11rem 779rem,
+    10rem 539rem,
+    10rem 862rem;
   background-size:
+    370rem  54rem,
     370rem 175rem,
     368rem  86rem,
     368rem  86rem,
@@ -140,6 +147,38 @@ body {
 .box--link:hover span,
 .box--link:focus-visible span { color: var(--ink-inverse); }
 
+.tabs {
+  display: flex;
+}
+
+.tab {
+  flex: 0 0 122rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rem 0;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  line-height: normal;
+  text-align: center;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--link-ink);
+}
+
+.tab[aria-current] {
+  background-color: var(--red);
+  color: var(--ground);
+  mix-blend-mode: color-burn;
+}
+
+.tab:not([aria-current]):hover,
+.tab:not([aria-current]):focus-visible {
+  background-color: var(--link-hover);
+  color: var(--ink-inverse);
+}
+
 .panel {
   overflow: hidden;
 }
@@ -186,13 +225,16 @@ body {
 
 .logo { left: 12rem; top: 54rem; width: 366rem; height: 148rem; display: block; }
 
+.tabs { left: 12rem; top: 236rem; width: 366rem; height: 50rem; }
+.tab  { font-size: 14rem; }
+
 .box--title {
-  left: 12rem; top: 214rem; width: 366rem; height: 171rem;
+  left: 12rem; top: 286rem; width: 366rem; height: 171rem;
 }
 .box--title h1 { font-size: 38rem; width: 342rem; }
 
 .box--runners {
-  left: 12rem; top: 385rem; width: 366rem; height: 84rem;
+  left: 12rem; top: 457rem; width: 366rem; height: 84rem;
 }
 .run-l { width: 70.36rem; height: 68.09rem; }
 .run-s { width: 39.3rem;  height: 38.03rem; }
@@ -203,7 +245,7 @@ body {
 .r5 { --x: 250rem;    --y: 15.77rem; }
 .r6 { --x: 316.56rem; --y: 45.83rem; }
 
-.panel         { left: 12rem; top: 469rem; width: 366rem; height: 239rem; }
+.panel         { left: 12rem; top: 541rem; width: 366rem; height: 239rem; }
 .panel::before { left: 7rem; top: 0; width: 100%; }
 .panel::after  { top: 8rem; height: 216.5rem; }
 
@@ -212,10 +254,10 @@ body {
 .tagline p { font-size: 27rem; width: 309rem; }
 
 .box--exercises {
-  left: 12rem; top: 708rem; width: 366rem; height: 84rem;
+  left: 12rem; top: 780rem; width: 366rem; height: 84rem;
 }
 
-.box--link      { left: 12rem; top: 792rem; width: 366rem; height: 128rem; }
+.box--link      { left: 12rem; top: 864rem; width: 366rem; height: 128rem; }
 .box--link span { font-size: 24rem; }
 .rope   { width: 36.73rem; height: 44.16rem; }
 .lifter { width: 57.15rem; height: 56.58rem; --x: 154.85rem; --y: 26rem; }
@@ -224,6 +266,189 @@ body {
 .j3 { --x: 248rem; --y: 4rem;  }
 .j4 { --x: 312rem; --y: 37rem; }
 
+.box--copy {
+  left: 12rem; top: 286rem; width: 366rem; height: 525rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rem 24rem;
+}
+
+.box--copy p {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 18rem;
+  line-height: 23rem;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--link-ink);
+}
+
+.stage--shop::before {
+  background-image:
+    url("assets/borders/border-tabs.svg"),
+    url("assets/borders/border-box-m.svg");
+  background-position:
+    10rem 234rem,
+    10rem 284rem;
+  background-size:
+    370rem  54rem,
+    370rem 529rem;
+}
+
+.box--table {
+  left: 12rem; top: 286rem; width: 366rem; height: 640rem;
+  padding: 40rem 24rem;
+}
+
+.log {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.log th,
+.log td {
+  padding: 0;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+  font-family: var(--font-ui);
+  font-size: 18rem;
+  line-height: 23rem;
+  text-transform: uppercase;
+  color: var(--link-ink);
+}
+
+.log thead th {
+  font-weight: 700;
+  text-decoration: underline;
+  padding-bottom: 32rem;
+}
+
+.log tbody td {
+  font-weight: 400;
+  height: 23rem;
+  padding: 8rem 0;
+}
+
+/* A td with no light-DOM children gets no line box in this renderer, so its
+   height:23rem collapses (loses the padding above, landing at 23rem not
+   39rem) and a padded row loses its band. :empty still matches after this
+   generates content, so a genuinely empty cell — padded or a real feed's
+   blank field alike — keeps a line box and its full 39rem row height. */
+.log tbody td:empty::after { content: "\00a0"; }
+
+.log tbody tr:nth-child(even) td {
+  background-image:
+    linear-gradient(blue, blue),
+    linear-gradient(var(--ground), var(--ground));
+  background-blend-mode: difference;
+}
+
+.log .c-member   { width: 218rem; }
+.log .c-activity { width: 319rem; }
+.log .c-date     { width: 118rem; }
+.log .c-stat     { width:  88rem; }
+
+.log th:not(:last-child),
+.log td:not(:last-child) { padding-right: 18rem; }
+
+.fallback {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 18rem;
+  line-height: 23rem;
+  text-transform: uppercase;
+  color: var(--link-ink);
+}
+
+.stage--log::before {
+  background-image:
+    url("assets/borders/border-tabs.svg"),
+    url("assets/borders/border-table-m.svg");
+  background-position:
+    10rem 234rem,
+    10rem 284rem;
+  background-size:
+    370rem  54rem,
+    370rem 644rem;
+}
+
+/* Phone-only: the log table has no phone frame in Figma to transcribe, so this
+   reflow is invented. Four 18px columns do not fit the 366-wide box, so each
+   row becomes two lines -- member+stat, then activity+date -- and the header
+   is hidden (`display: none` removes it from the accessibility tree too, so
+   this is hidden from ALL users at this width, not just sighted ones -- a
+   four-column header cannot honestly label a two-line row for anyone). The
+   markup keeps <thead> and scope="col" because the desktop layout still
+   needs them, not because either does anything at this width. See
+   NOTES.md. */
+@media (max-width: 767.98px) {
+
+  .log,
+  .log thead,
+  .log tbody,
+  .log tr { display: block; width: 100%; }
+
+  .log colgroup { display: none; }
+
+  .log thead { display: none; }
+
+  .log tbody tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "member stat"
+      "activity date";
+    column-gap: 12rem;
+    padding: 8rem 0;
+    position: relative;
+    isolation: isolate;
+  }
+
+  .log tbody td {
+    display: block;
+    height: auto;
+    padding: 0;
+    font-size: 15rem;
+    line-height: 20rem;
+    min-width: 0;
+  }
+
+  .log tbody td:nth-child(1) { grid-area: member;   font-weight: 700; }
+  .log tbody td:nth-child(2) { grid-area: activity; }
+  .log tbody td:nth-child(3) { grid-area: date;     text-align: right; }
+  .log tbody td:nth-child(4) { grid-area: stat;     text-align: right; font-weight: 700; }
+
+  .log th:not(:last-child),
+  .log td:not(:last-child) { padding-right: 0; }
+
+  /* The band moves from a per-cell background to the row itself: the rows
+     are display:grid here, and position:relative + isolation:isolate on a
+     grid container is reliable in a way it is not on a table row. Painted
+     via two background layers blended on the ::after itself (not
+     mix-blend-mode against whatever backdrop happens to be behind the row),
+     the same self-contained technique already used per-cell on desktop --
+     so it is correct regardless of grid gaps or what paints behind the row. */
+  .log tbody tr:nth-child(even) td {
+    background-image: none;
+  }
+
+  .log tbody tr:nth-child(even)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      linear-gradient(blue, blue),
+      linear-gradient(var(--ground), var(--ground));
+    background-blend-mode: difference;
+    pointer-events: none;
+  }
+}
+
 @media (min-width: 768px) {
 
   html { font-size: min(1px, calc(100vw / 1440), calc(100vh / 1024)); }
@@ -231,20 +456,23 @@ body {
 
   .stage { width: 1440rem; height: 1024rem; transform: none; }
 
-  .stage::before {
+  .stage--start::before {
     background-image:
+      url("assets/borders/border-tabs.svg"),
       url("assets/borders/border-title-d.svg"),
       url("assets/borders/border-runners-d.svg"),
       url("assets/borders/border-exercises-d.svg"),
       url("assets/borders/border-panel-d.svg"),
       url("assets/borders/border-link-d.svg");
     background-position:
+      322rem 234rem,
       322rem 284rem,
       322rem 466rem,
       669rem 466rem,
       322rem 597.5rem,
       321rem 837rem;
     background-size:
+      370rem  54rem,
       795rem 182rem,
       351rem 135rem,
       447rem 135rem,
@@ -252,10 +480,40 @@ body {
       351rem 132rem;
   }
 
+  .box--copy { left: 324rem; width: 791rem; }
+
+  .stage--shop::before {
+    background-image:
+      url("assets/borders/border-tabs.svg"),
+      url("assets/borders/border-table-d.svg");
+    background-position:
+      322rem 234rem,
+      322rem 284rem;
+    background-size:
+      370rem  54rem,
+      795rem 529rem;
+  }
+
+  .box--table { left: 324rem; width: 791rem; height: 525rem; }
+
+  .stage--log::before {
+    background-image:
+      url("assets/borders/border-tabs.svg"),
+      url("assets/borders/border-table-d.svg");
+    background-position:
+      322rem 234rem,
+      322rem 284rem;
+    background-size:
+      370rem  54rem,
+      795rem 529rem;
+  }
+
   .d-only { display: block; }
   .m-only { display: none; }
 
-  .logo { left: 537rem; top: 129rem; width: 366rem; height: 148rem; }
+  .logo { left: 537rem; top: 70rem; width: 366rem; height: 148rem; }
+
+  .tabs { left: 324rem; top: 236rem; }
 
   .i--diet { --x: 1046rem; --y: 218rem; width: 69rem; height: 66.95rem; }
 

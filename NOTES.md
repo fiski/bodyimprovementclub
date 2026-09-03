@@ -1,7 +1,8 @@
 # Body Improvement Club — implementation notes
 
-Reference for `index.html`, `style.css` and `og.html`. The source files carry no
-comments; everything that explains *why* they look the way they do lives here.
+Reference for `index.html`, `log-of-gains.html`, `shop.html`, `og.html`,
+`style.css`, `js/` and `tools/`. The source files carry no comments; everything
+that explains *why* they look the way they do lives here.
 
 Figma file: `BgBx1W0MizlqEKMRBrGjdk`
 
@@ -14,10 +15,10 @@ Figma file: `BgBx1W0MizlqEKMRBrGjdk`
 
 ### Link preview
 
-`og:image` MUST be absolute — scrapers do not resolve relative URLs, and GitHub
-Pages serves this project site from a `/bodyimprovementclub` subpath, so a
-root-relative path would 404. Update both the URLs in the head and the Pages
-settings together if the site ever moves to a custom domain.
+`og:image` MUST be absolute — scrapers do not resolve relative URLs. The site is
+served from `bodyimprovement.club`, so every `<head>` carries that absolute
+origin; there are now three of them (`index.html`, `log-of-gains.html`,
+`shop.html`), so update all of them together if the domain ever changes again.
 
 `assets/og-image.png` is rendered from `og.html`; see that file to regenerate.
 
@@ -69,8 +70,40 @@ the difference between the export's bounds and the frame rect: e.g. the phone
 title box is 366x171 and its export 370x175, so `2rem`.
 
 Backgrounds do not paint outside their box, so `.stage::before` has to be at least
-as tall as the lowest brush layer: y=922 on the phone, 969 on desktop. Both
+as tall as the lowest brush layer: y=994 on the phone, 969 on desktop. Both
 `.stage` heights clear that, so it simply fills the stage.
+
+### v2 exports
+
+`border-tabs.svg` (370x54) is the tab strip: the `Menu` component with every cell
+fill and label removed, so it is stroke-only. The active cell's red fill is CSS,
+not baked in — otherwise it could not move between pages.
+
+`border-table-d.svg` (795x529) is the log/shop box. The `Table` component was
+drawn 799x533 but its row grid sums to 743, the interior a 791 box implies
+(`791 - 2*24` padding), so the component was resized to 791x525 to match the grid
+it was built for. Both exports carry the usual 2px brush overflow per side.
+
+Re-exporting either border later: the naive recipe (clone the component, then
+remove each cell's children directly) throws `Removing this node is not
+allowed`, because both the Table clone's children and the Menu's three cells
+are component instances, and Figma refuses to remove an instance's children
+directly. Call `detachInstance()` first — on the clone itself for the table,
+and on *each cell* for the tab strip (detaching the outer Menu clone alone is
+not enough; every `Menu item` cell inside it is still its own instance and
+needs its own `detachInstance()` before its label can be removed).
+
+The `Menu` component's middle cell (`log of gains`) was found HUG-sized, auto-
+fitting its label to 144.13px while its siblings stayed FIXED at 122px — a drift
+from the intended three-equal-122px strip (366 wide, flush with the 366px phone
+content box). It has been pinned to FIXED 122 to match its siblings. If a future
+edit sets it back to HUG, the cell will silently widen to fit whatever label is
+in it, `Menu` will stop being 366 wide, and `border-tabs.svg` will no longer
+align with the tab strip it is composited over — re-export is not enough, the
+component's sizing mode has to stay FIXED. Note the label itself never fit the
+122px cell's padding even before this (`log of gains` ink is ~111px in an
+81.9px content box after the 20.064px horizontal padding), so the CSS for this
+strip drops horizontal padding on the tab labels and centers them instead.
 
 ### Palette
 
@@ -157,10 +190,16 @@ not just the stage, so the texture reads on any screen size.
 
 ### .stage
 
-The phone box is the scroll height, not the height of the Figma frame: 946 = the
-inked extent's bottom edge at 922 — the Strava button's brush, 2px below its 920
-rect edge — plus a 24px bottom margin. The top margin needs no help; the
-composition's own empty band above the logo at y=54 supplies it.
+The phone box is the scroll height, not the height of the Figma frame: 1018 = the
+inked extent's bottom edge at 994 — the Strava button's brush, 2px below
+`.box--link`'s rect edge at 992 (864 top + 128 height) — plus a 24px bottom
+margin. The top margin needs no help; the composition's own empty band above the
+logo at y=54 supplies it.
+
+This height is sized for the START view alone and reused as-is for the log and
+shop pages, so that the tab strip never shifts between pages; on those two
+pages the fixed 1018rem `.stage` scrolls past roughly 90rem and 205rem of empty
+ground respectively, below their shorter compositions.
 
 The width is the 380 the scale was fitted to, NOT the canvas's 390: at 390 the
 stage is wider than the viewport by its empty right-hand gutter, and an overflow
@@ -257,6 +296,137 @@ would paint over this opaque box without an explicit stacking bump — hence
 No stroke on the phone tagline box — the desktop one has a 1px INSIDE stroke, this
 variant has none.
 
+### Tabs
+
+The strip is 366 wide with 122-wide cells at BOTH breakpoints — the phone content
+column is also 366, and 366 = 3 x 122 — so only `left` changes between them.
+
+The active cell is `--red` filled with a `--ground` label and
+`mix-blend-mode: color-burn`, which is why it samples ~#d10000 rather than
+#e30b19; that is the burn against the ground, not a different red.
+
+The strip does NOT interrupt the box's top border. The tab metaphor might suggest
+the active cell should open into the box, but sampling both v2 frames shows the
+box's top brush line running continuously across all three cells with the active
+fill stopping just above it. This falls out for free: the strip is a `.stage`
+child and `.stage::before` composites every brush export above all children at
+`z-index: 2`. No per-active-state exports, no z-index juggling.
+
+`.stage::before` is split — shared properties on `.stage::before`, the per-view
+layer lists on `.stage--start` / `.stage--log` / `.stage--shop`.
+
+### The log table
+
+The banded rows are BLUE, not yellow: each even-row cell blends a `blue` layer
+against a `var(--ground)` layer via `background-blend-mode: difference`, a
+deliberate substitute for the Figma component's own mechanism rather than a
+copy of it. Against the ground that computes to `|#d8ccbc - #0000ff| = #d8cc43`,
+which is what the frames sample. Keeping the mechanism rather than the result
+means the band tracks `--ground` if the ground is ever retuned, and it records
+the intent. Do not "simplify" it to a yellow token.
+
+The band is painted as the cell's own `background-image` (two stacked
+`linear-gradient(solid, solid)` layers blended with `background-blend-mode`),
+NOT a `::before`. An absolutely positioned `::before` paints in a later phase
+than the cell's in-flow text and gets caught by its own `mix-blend-mode`,
+inverting the glyphs along with the ground (`#7f1010` ink reads as `#7f10ef`
+under the band — verified by `tools/verify.py log`, which samples row text for
+this). A `background-image` paints in the background layer, guaranteed below
+content, so the dark-red ink stays dark-red on top of the yellow band. Do not
+reach for `z-index: -1` on a `::before` instead — that joins the root stacking
+context and lands under `.grain` at `z-index: 0`, washing the band out.
+
+The header's `padding-bottom: 32rem` is the drawn 8px header padding plus the
+drawn 24px gap between header and rows. Folding the gap into the header cell puts
+the first row at y=95 with no spacer row, and keeps the whole box at
+40 + 23 + 32 + 390 + 40 = 525.
+
+`height: 23rem` on the row cells is necessary but not sufficient to keep a padded
+EMPTY row 39px tall: a `<td>` with no light-DOM children gets no line box in this
+renderer, so the height alone still collapses (loses `padding: 8rem 0`, landing
+at 23rem not 39rem) and the banding drops out on a short feed. The
+`.log tbody td:empty::after { content: "\00a0"; }` rule just below restores the
+line box for any genuinely empty cell — a padded row from `log.js`'s `pad()`, or
+a real feed entry with a blank field — so `height: 23rem` plus that generated
+nbsp is what actually holds the row at 39rem. See `## js/` further down for how
+`pad()`'s `EMPTY` rows exercise this.
+
+`white-space: nowrap` on `.log th`/`.log td` is required, not decorative: several
+of the hardcoded stat values (e.g. "8.2 KM") measure wider than a stat column
+sized for Figma's 5-character placeholder ("index") at Overpass Mono's real
+advance width, and without `nowrap` the space before the unit becomes a
+soft-wrap point, doubling that row's height and knocking every following row
+off the 39rem pitch (verified by sampling row bands in `tools/verify.py log` —
+omitting `nowrap` flips rows 2-5 and 10 and paints an 11th row below y=800).
+Single-line rows are load-bearing for the fixed 39rem pitch, not just tidy.
+
+Column widths are `218 / 319 / 118 / 88`, not the drawn `218 / 351 / 118 / 56`:
+the drawn 56rem stat column was sized for the 5-character placeholder and is
+too narrow for real values ("31.7 KM", "1:04:20", ~81rem at 18rem Overpass
+Mono) — with `nowrap` in place those values overflowed rightward past the box's
+own interior and out through its brush border rather than wrapping. Activity
+gives up exactly the 32rem stat needs (351 → 319) and stat gains that same
+32rem (56 → 88), so the four still sum to the drawn 743. Activity was picked
+as the donor because it has real slack even after losing 32rem: its content
+box is 301rem after its own gutter, and its longest value ("gravel loop
+north") measures only ~202rem. `tools/verify.py log` asserts no cell ink
+appears past the interior's right edge (x=1091) to catch this class of
+regression.
+
+### The phone log table is DERIVED, not transcribed
+
+There is no v2 phone frame for the log table. Four 18px columns do not fit the
+366-wide phone box, so each row reflows to two lines -- member + stat on the
+first, activity + date on the second -- at 15px/20px, and the header is
+hidden with `display: none`. That removes it from the accessibility tree in
+every major browser too, so this is hidden from ALL users at phone width, not
+just sighted ones -- a four-column header cannot honestly label a two-line
+row for anyone, and the reflowed rows are self-describing by position and
+weight. The markup still keeps `<thead>` and `scope="col"`, but only because
+the desktop layout needs them; neither does anything for a phone-width user,
+assistive tech included.
+
+Two phone borders exist, not one, because the two phone boxes are different
+heights: `border-box-m.svg` (370x529) is `shop.html`'s unchanged 366x525
+centred-copy box; `border-table-m.svg` (370x644) is `log-of-gains.html`'s
+reflowed, taller box. On desktop the two pages still share one export
+(`border-table-d.svg`) because both boxes are 791x525 there -- only the phone
+layout diverges.
+
+Both were produced by the same recipe as the desktop `border-table-d.svg`
+(clone `Table` (`59:56`) via `createInstance()`, `detachInstance()` the clone
+itself, remove its children, resize, export, delete the clone) -- NOT by
+rescaling `border-table-d.svg`. Squeezing 795 down to 370 is a 0.465 horizontal
+compression that a hand-drawn brush stroke does not survive: the bristles
+visibly bunch up. Re-exporting at the real phone width keeps the stroke
+density correct.
+
+`.box--table`'s phone height (640rem) was measured, not computed from
+`8 + 10x56 + 8`-style arithmetic: a script rendered the page, read
+`getBoundingClientRect()` on the last row and the box, and converted back to
+rem via the root font-size. The arithmetic prediction (`40 + 10x56 + 40 =
+640`) landed within 0.05rem of the measured value, but the measurement is
+what was kept -- grid line-box rounding at a fractional rem can move this,
+and only a render proves it settled.
+
+On the phone the band moves from a per-cell `background-image` to the row's
+own `::after`, because the rows are `display: grid` there and
+`position: relative` + `isolation: isolate` on a grid container is reliable
+where `position: relative` is not on a table row (see the desktop notes above
+on why a `::before`/`z-index` approach fails). The row `::after` still uses
+the same self-contained two-layer `background-blend-mode: difference` trick
+as the desktop per-cell band (`linear-gradient(blue,blue)` blended against
+`linear-gradient(var(--ground),var(--ground))`) rather than `background: blue;
+mix-blend-mode: difference` blending against whatever happens to be painted
+behind the row (the grain texture, not a flat ground) -- the two-layer form is
+correct regardless of backdrop, and `column-gap` between the member/activity
+and stat/date columns is safe because the row's own `::after` covers the
+gap along with the rest of the row's box.
+
+When a phone frame for the log table is eventually drawn in Figma, all of
+this -- the two-line layout, the 640rem box height, both border exports --
+should be re-transcribed and re-exported rather than assumed still correct.
+
 ---
 
 ## og.html
@@ -289,3 +459,63 @@ chrome --headless --disable-gpu --hide-scrollbars \
 python -c "from PIL import Image; i=Image.open('card@2x.png').convert('RGB'); \
            i.resize((1200,630), Image.LANCZOS).save('assets/og-image.png')"
 ```
+
+---
+
+## js/
+
+`activities.js` is placeholder data and nothing else. `log.js` owns the only seam
+that matters: `loadActivities()`. When the Strava integration lands it replaces
+that one function — a fetch of a generated JSON file, most likely, since Strava
+needs OAuth and a token cannot live in a static page. Nothing else in `log.js`
+knows where rows come from.
+
+`ROW_COUNT` is 10 and must stay tied to `border-table-d.svg`: the box is a fixed
+791x525 with one border export, so `pad()` fills a short feed and `slice()`
+truncates a long one. Changing the row count means re-exporting the border.
+
+Both are classic scripts loaded in order, NOT modules — `type="module"` is blocked
+by CORS on `file://`, and both `tools/verify.py` and the `og.html` recipe render
+local files.
+
+`EMPTY`'s fields are genuinely empty strings (`""`), matching a real feed's
+blank field. A truly empty `<td>` would otherwise lose its line box and its
+39rem row height — see the `.log tbody td:empty::after` rule in `style.css`'s
+`### The log table` section, which is what actually keeps a padded (or
+blank-field) row banded.
+
+---
+
+## tools/verify.py
+
+Renders each page in headless Chrome and asserts measured pixel facts against the
+Figma frames — the same sampling that settled the v2 design questions, kept
+runnable so a change that breaks the composition fails loudly.
+
+```sh
+python tools/verify.py            # every suite
+python tools/verify.py log phone  # a subset
+```
+
+Every expected number in it is a raw Figma pixel, which is also a CSS px at the
+render sizes, because `.stage` is scaled so `1rem` == `1px`. The `CHROME` path at
+the top is a Windows absolute path; change it to suit the machine.
+
+The phone suite renders at `PHONE = (760, 2040)`, not the stage's nominal
+380x1018: Chrome on Windows clamps a headless window's requested width to
+roughly 500px, so asking for 380 silently produced a 512px viewport and
+rendered the phone stage zoomed and clipped — every phone measurement was
+wrong until that clamp was found. 760 is exactly 2x the 380rem stage width and
+still comfortably under the 768px desktop breakpoint, so `PHONE_SCALE = 2` and
+every phone expectation in the file is just its rem value doubled. That trap
+cost real debugging time before it was traced to the window size, not the
+markup — worth knowing before re-measuring PHONE on a different machine.
+
+What it deliberately cannot check: focus-visible states and keyboard order, which
+are a manual pass in a real browser.
+
+The harness needs a live network connection to Google Fonts: the log table's
+column widths were tuned against Overpass Mono's real glyph advance widths, and
+a run offline (or blocked) falls back to a different font with different
+metrics, which shifts sampled x-coordinates and produces failures that look
+like layout bugs but are actually a missing font.
