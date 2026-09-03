@@ -98,6 +98,18 @@ def median(im, x0, x1, y0, y1):
     return tuple(round(c) for c in (st.median(ch) for ch in zip(*px)))
 
 
+def spread(im, x0, x1, y0, y1):
+    """Population std of the red channel over a window.
+
+    The film grain is what this measures. A window of untouched paper reads
+    ~5.5; a flat fill painted over the paper reads 0.00. Red because the band
+    leaves R and G alone (differencing against pure blue only touches B), so
+    R carries the grain identically inside and outside a band.
+    """
+    px = [im.getpixel((x, y))[0] for y in range(y0, y1) for x in range(x0, x1)]
+    return st.pstdev(px)
+
+
 def hexof(rgb):
     return "#%02x%02x%02x" % rgb
 
@@ -208,6 +220,23 @@ def check_log(r):
         else:
             r.check(near(band, (216, 204, 188), tol=10),
                     f"log: row {i + 1} unbanded", hexof(band), "ground")
+
+    # The band must carry the film grain, not just the grain's average colour.
+    # Figma paints the row's blue fill with `background-blend-mode: difference`
+    # against the composition beneath it, which is Film_Grain over the ground,
+    # so the texture runs through the band at full strength: the frame measures
+    # std 5.38 on the band against 5.55 on the ground beside it. Differencing
+    # against a flat --ground swatch instead gives the right mean (#d8cc43) and
+    # a dead-flat slab -- std 0.00 -- which is a defect no colour check can see,
+    # since every sample in this file is a median or a mean. Sample the row's
+    # own 8rem top padding, which carries no glyphs whatever the feed says.
+    for i in (1, 3, 5, 7, 9):
+        top = 381 + i * 39
+        band = spread(im, 400, 1080, top + 1, top + 7)
+        paper = spread(im, 400, 1080, top + 40, top + 46)
+        r.check(band > 3.0,
+                f"log: row {i + 1} band carries the grain, not a flat fill",
+                "std %.2f" % band, "> 3.0 (paper beside it: %.2f)" % paper)
 
     bottom = median(im, 550, 566, 800, 806)
     r.check(near(bottom, (216, 204, 188), tol=10),
@@ -342,6 +371,16 @@ def check_phone(r):
                 r.check(near(band, (216, 204, 67), tol=10),
                         f"phone log-of-gains.html: row {i + 1} banded #d8cc43",
                         hexof(band), "#d8cc43")
+
+                # Same grain assertion as check_log, on the phone's separate
+                # band mechanism (a row-level ::after rather than a per-cell
+                # background). The threshold is lower than the desktop's 3.0
+                # because this render is 2px/rem: each grain pixel covers four
+                # output pixels, which halves the measured spread.
+                texture = spread(im, bx0, bx1, by0, by1)
+                r.check(texture > 1.5,
+                        f"phone log-of-gains.html: row {i + 1} band carries the grain",
+                        "std %.2f" % texture, "> 1.5")
 
                 # The band must paint BENEATH the member-column text (the
                 # row's first line): an inverted #7f1010 reads #7f10ef, and

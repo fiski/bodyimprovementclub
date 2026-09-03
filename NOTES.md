@@ -317,13 +317,52 @@ layer lists on `.stage--start` / `.stage--log` / `.stage--shop`.
 
 ### The log table
 
-The banded rows are BLUE, not yellow: each even-row cell blends a `blue` layer
-against a `var(--ground)` layer via `background-blend-mode: difference`, a
-deliberate substitute for the Figma component's own mechanism rather than a
-copy of it. Against the ground that computes to `|#d8ccbc - #0000ff| = #d8cc43`,
-which is what the frames sample. Keeping the mechanism rather than the result
-means the band tracks `--ground` if the ground is ever retuned, and it records
-the intent. Do not "simplify" it to a yellow token.
+The banded rows are BLUE, not yellow: each even-row cell differences a `blue`
+layer over the paper via `background-blend-mode`, which is the Figma row's own
+mechanism (`background: #00F; background-blend-mode: difference`), not a
+substitute for it. Do not "simplify" it to a yellow token.
+
+What the blue is differenced AGAINST is the load-bearing part, and it is the
+textured paper, not a flat `var(--ground)` swatch. In Figma the row's fill
+blends with the composition beneath it, which is Film_Grain over the ground, so
+the grain runs through the band at full strength — the frame measures red-channel
+std 5.38 across a band against 5.55 on the ground beside it. Differencing
+against a flat swatch gives the correct MEAN (`|#d8ccbc - #0000ff| = #d8cc43`,
+which is what every median-based check in `tools/verify.py` samples) and a
+dead-flat slab: std 0.00. That flatness — not the hue — is what read wrong
+against the frame, and it survived a full verification pass because every
+colour assertion in this repo is a median or a mean. `tools/verify.py log` and
+the phone block now assert `spread(...) > 3.0` / `> 1.5` per banded row, which
+fails at std 0.00 on the old construction.
+
+So the paper is REBUILT inside the cell's own background stack, bottom to top:
+`background-color: var(--ground)`, the grain image, an 80%-opaque ground wash
+over it, then blue differenced over the pair. The wash is how `.grain`'s
+`opacity: 0.20` is expressed — background layers have no per-layer opacity —
+and it is the same reconstruction `.tagline` already does. `background-size:
+max(100vw, 140.625vh) auto` + `background-position: center` +
+`background-attachment: fixed` anchor the grain layer to the VIEWPORT exactly
+as `.grain`'s `position: fixed` + `object-fit: cover` do (140.625vh is
+`100vh x 1440/1024`, the image's aspect, which is what makes the two agree).
+Verified aligned, not merely similar: rendered against a control page with the
+band suppressed, the band's R and G match the bare paper's at the same pixels
+to within 2/255, and B is its exact inversion to within 2 — a misaligned grain
+would differ by the grain's own range, ~25.
+
+Reconstructing rather than blending against the real backdrop is also what
+makes this work at both breakpoints. `mix-blend-mode: difference` on the cell
+does see the real grain, but blends the cell's own text too (`#7f1010` renders
+`#b2c806`, measured); and on phone `.stage` carries a `transform`, making it a
+stacking context and therefore an isolated group, so a blend inside it cannot
+reach `.grain` at all. A background stack has no dependency on what is painted
+behind the element, which is why the desktop cell and the phone row `::after`
+can carry the identical layer list.
+
+`background-color: blue` alone does NOT work in place of the blue gradient
+layer: `background-blend-mode` blends an element's own background layers with
+each other and never sees what is painted behind the element, so a lone blue
+has no second operand and paints solid `#0000ff` (measured). The
+`linear-gradient(colour, colour)` form is just "solid fill as an image layer".
 
 The band is painted as the cell's own `background-image` (two stacked
 `linear-gradient(solid, solid)` layers blended with `background-blend-mode`),
@@ -372,6 +411,29 @@ box is 301rem after its own gutter, and its longest value ("gravel loop
 north") measures only ~202rem. `tools/verify.py log` asserts no cell ink
 appears past the interior's right edge (x=1091) to catch this class of
 regression.
+
+The stat column is the one RIGHT-aligned column, and that is a consequence of
+the widening above, not a separate decision. In the drawn row the band's right
+edge and the stat's last glyph both land on x=743; left-aligning the stat
+inside a column 32rem wider than drawn pushed the last glyph to 717 and left
+the band running 26rem past it, which is the one thing that read visibly wrong
+against the Figma frame. `text-align: right` puts "INDEX" back on the drawn
+689..743 and keeps every longer real value flush to the same edge.
+
+`text-align: right` is NOT what keeps a long value inside the box -- an
+overflowing line still spills rightward whatever its alignment (measured:
+"1:04:20" in a 56rem cell renders 993.8..1064.0 against a cell ending at
+1044.5, with `text-align: right` computed). The column staying wide enough for
+the longest real stat is what does that, so the 88rem is still load-bearing
+and the two are not interchangeable.
+
+What is still off the drawing after this: DATE. Activity donating the 32rem
+puts the date column at x=537 rather than the drawn 569, and no arrangement
+fixes that while real stats stay inside the box -- the drawn row leaves the
+stat 56rem, and a 7-character stat needs 76rem, so something between the date
+and the right edge has to give. Member, activity and stat all sit on their
+drawn coordinates; date is 32rem left of its. The alternative is reformatting
+the feed's stats to five characters, which is a data decision, not a CSS one.
 
 ### The phone log table is DERIVED, not transcribed
 
