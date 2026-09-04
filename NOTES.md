@@ -305,6 +305,23 @@ The active cell is `--red` filled with a `--ground` label and
 `mix-blend-mode: color-burn`, which is why it samples ~#d10000 rather than
 #e30b19; that is the burn against the ground, not a different red.
 
+This burn (and the `.i` icons' own `color-burn`, below) went dead on phone —
+reported as "the blend mode doesn't work" on iPhone Chrome, but reproduced
+identically in desktop Chromium and WebKit at a 390px viewport, so it was
+never iOS-specific. `.stage` carried `transform: translateX(-5rem)` at phone
+width to nudge the 380-wide stage left by 5rem; any transform value other
+than `none` establishes a new stacking context AND a new containing block for
+fixed-position/fixed-attachment descendants (CSS Transforms spec), so every
+blend inside `.stage` — the active tab, the runner/rope/lifter icons — could
+only see backdrop painted inside that isolated group, which is nothing
+(`.stage` itself paints no background), not `.grain` or the `--ground` body
+fill sitting outside it. `.stage` is `position: relative`, so `left: -5rem`
+gives the identical 5rem nudge without a transform, without creating either
+kind of isolation. Desktop's `.stage { transform: none; }` override is now
+`left: 0` for the same reason (`none` was already a no-op stacking-wise, but
+keeping both breakpoints on the same mechanism avoids reintroducing this by
+accident).
+
 The strip does NOT interrupt the box's top border. The tab metaphor might suggest
 the active cell should open into the box, but sampling both v2 frames shows the
 box's top brush line running continuously across all three cells with the active
@@ -352,11 +369,13 @@ would differ by the grain's own range, ~25.
 Reconstructing rather than blending against the real backdrop is also what
 makes this work at both breakpoints. `mix-blend-mode: difference` on the cell
 does see the real grain, but blends the cell's own text too (`#7f1010` renders
-`#b2c806`, measured); and on phone `.stage` carries a `transform`, making it a
-stacking context and therefore an isolated group, so a blend inside it cannot
-reach `.grain` at all. A background stack has no dependency on what is painted
-behind the element, which is why the desktop cell and the phone row `::after`
-can carry the identical layer list.
+`#b2c806`, measured); and `.stage` used to carry a `transform` at phone width
+(see the Tabs section above — since replaced with `left`), which made it a
+stacking context and therefore an isolated group, so a blend inside it could
+not reach `.grain` at all. A background stack has no dependency on what is
+painted behind the element, which is why the desktop cell and the phone row
+`::after` can carry the identical layer list — true regardless of which of
+those two reasons applies at a given breakpoint.
 
 `background-color: blue` alone does NOT work in place of the blue gradient
 layer: `background-blend-mode` blends an element's own background layers with
@@ -484,6 +503,17 @@ behind the row (the grain texture, not a flat ground) -- the two-layer form is
 correct regardless of backdrop, and `column-gap` between the member/activity
 and stat/date columns is safe because the row's own `::after` covers the
 gap along with the rest of the row's box.
+
+Moving the band to the row's `::after` requires switching the four `<td>`s off
+their desktop `background-image`, but the media query originally reset only
+`background-image: none` and left `background-color: var(--ground)` (set on
+the same desktop selector) in place. That opaque per-cell fill painted over
+the row's `::after` band everywhere except the `column-gap` and the row's
+outer padding, so only a thin band-coloured outline showed around each cell
+instead of a filled row -- reported as "the table is bugged with the color
+background... for phone sizes", reproduced identically off-device in
+Chromium and WebKit. Fixed by also setting `background-color: transparent`
+on `.log tbody tr:nth-child(even) td` in that same media-query rule.
 
 When a phone frame for the log table is eventually drawn in Figma, all of
 this -- the two-line layout, the 640rem box height, both border exports --

@@ -54,7 +54,7 @@ body {
   flex: none;
   width: 380rem;
   height: 1018rem;
-  transform: translateX(-5rem);
+  left: -5rem;
 }
 
 .stage > * { position: absolute; }
@@ -497,6 +497,7 @@ body {
      the same self-contained technique already used per-cell on desktop --
      so it is correct regardless of grid gaps or what paints behind the row. */
   .log tbody tr:nth-child(even) td {
+    background-color: transparent;
     background-image: none;
   }
 
@@ -523,7 +524,7 @@ body {
   html { font-size: min(1px, calc(100vw / 1440), calc(100vh / 1024)); }
   html { font-size: min(1px, calc(100vw / 1440), calc(100svh / 1024)); }
 
-  .stage { width: 1440rem; height: 1024rem; transform: none; }
+  .stage { width: 1440rem; height: 1024rem; left: 0; }
 
   .stage--start::before {
     background-image:
