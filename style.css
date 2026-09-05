@@ -8,6 +8,7 @@
 
   --link-ink:    #7f1010;
   --link-hover:  #3a67ed;
+  --tab-hover:   #ddb5b8;
   --ink-inverse: #ffffff;
 
   --stroke-alpha: 100%;
@@ -175,8 +176,8 @@ body {
 
 .tab:not([aria-current]):hover,
 .tab:not([aria-current]):focus-visible {
-  background-color: var(--link-hover);
-  color: var(--ink-inverse);
+  background-color: var(--tab-hover);
+  mix-blend-mode: color-burn;
 }
 
 .panel {
