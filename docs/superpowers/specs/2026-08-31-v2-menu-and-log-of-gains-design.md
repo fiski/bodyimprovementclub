@@ -449,4 +449,4 @@ drift and its resolution, and the fixed 10-row constraint tying the box height t
   replaces `loadActivities` and nothing else.
 - Shop content.
 - A v2 phone frame.
-- `assets/banner strava.png`, currently untracked in the working tree; left alone.
+- `assets/banner-strava.png`, currently untracked in the working tree; left alone.
