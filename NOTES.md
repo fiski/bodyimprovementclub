@@ -1,4 +1,4 @@
-# Body Improvement Club — implementation notes
+# Body Improvement Club - implementation notes
 
 Reference for `index.html`, `log-of-gains.html`, `shop.html`, `og.html`,
 `style.css`, `js/` and `tools/`. The source files carry no comments; everything
@@ -6,8 +6,8 @@ that explains *why* they look the way they do lives here.
 
 Figma file: `BgBx1W0MizlqEKMRBrGjdk`
 
-- desktop node `33:945` / `5:653` — 1440x1024 composition
-- phone node `6:1847` — 390x1024 composition
+- desktop node `33:945` / `5:653` - 1440x1024 composition
+- phone node `6:1847` - 390x1024 composition
 
 ---
 
@@ -15,14 +15,14 @@ Figma file: `BgBx1W0MizlqEKMRBrGjdk`
 
 ### Link preview
 
-`og:image` MUST be absolute — scrapers do not resolve relative URLs. The site is
+`og:image` MUST be absolute - scrapers do not resolve relative URLs. The site is
 served from `bodyimprovement.club`, so every `<head>` carries that absolute
 origin; there are now three of them (`index.html`, `log-of-gains.html`,
 `shop.html`), so update all of them together if the domain ever changes again.
 
 `assets/og-image.png` is rendered from `og.html`; see that file to regenerate.
 
-Facebook, LinkedIn and X cache a scrape aggressively — after changing the card,
+Facebook, LinkedIn and X cache a scrape aggressively - after changing the card,
 re-scrape the URL in each platform's debugger to see the new one.
 
 ### Markup notes
@@ -40,14 +40,14 @@ re-scrape the URL in each platform's debugger to see the new one.
 ## style.css
 
 Geometry is transcribed from the file's absolute child transforms, read via the
-Plugin API — NOT from Figma's generated Tailwind, which offsets every child of a
+Plugin API - NOT from Figma's generated Tailwind, which offsets every child of a
 stroked frame by half the stroke width.
 
 ### Brush strokes
 
-Box strokes are BRUSH strokes (Figma's hand-drawn stroke style) — solid `#e30b19`
+Box strokes are BRUSH strokes (Figma's hand-drawn stroke style) - solid `#e30b19`
 at 100%, weight 4 on the title box and the strava link button, 1.85 on the icon
-strips, 1 on the panel, all `strokeAlign: CENTER` — but painted as a bundle of
+strips, 1 on the panel, all `strokeAlign: CENTER` - but painted as a bundle of
 wobbling ink lines rather than one clean rule. Neither Dev Mode nor the Plugin API
 exposes the brush; both report a plain solid stroke, which is why an earlier
 transcription drew flat rules and why sampling a render reads a washed-out ~25%
@@ -77,7 +77,7 @@ as tall as the lowest brush layer: y=994 on the phone, 969 on desktop. Both
 
 `border-tabs.svg` (370x54) is the tab strip: the `Menu` component with every cell
 fill and label removed, so it is stroke-only. The active cell's red fill is CSS,
-not baked in — otherwise it could not move between pages.
+not baked in - otherwise it could not move between pages.
 
 `border-table-d.svg` (795x529) is the log/shop box. The `Table` component was
 drawn 799x533 but its row grid sums to 743, the interior a 791 box implies
@@ -88,18 +88,18 @@ Re-exporting either border later: the naive recipe (clone the component, then
 remove each cell's children directly) throws `Removing this node is not
 allowed`, because both the Table clone's children and the Menu's three cells
 are component instances, and Figma refuses to remove an instance's children
-directly. Call `detachInstance()` first — on the clone itself for the table,
+directly. Call `detachInstance()` first - on the clone itself for the table,
 and on *each cell* for the tab strip (detaching the outer Menu clone alone is
 not enough; every `Menu item` cell inside it is still its own instance and
 needs its own `detachInstance()` before its label can be removed).
 
 The `Menu` component's middle cell (`log of gains`) was found HUG-sized, auto-
-fitting its label to 144.13px while its siblings stayed FIXED at 122px — a drift
+fitting its label to 144.13px while its siblings stayed FIXED at 122px - a drift
 from the intended three-equal-122px strip (366 wide, flush with the 366px phone
 content box). It has been pinned to FIXED 122 to match its siblings. If a future
 edit sets it back to HUG, the cell will silently widen to fit whatever label is
 in it, `Menu` will stop being 366 wide, and `border-tabs.svg` will no longer
-align with the tab strip it is composited over — re-export is not enough, the
+align with the tab strip it is composited over - re-export is not enough, the
 component's sizing mode has to stay FIXED. Note the label itself never fit the
 122px cell's padding even before this (`log of gains` ink is ~111px in an
 81.9px content box after the 20.064px horizontal padding), so the CSS for this
@@ -111,7 +111,7 @@ The eight tokens on `:root` mirror, one-for-one, the "Color" variable collection
 in the Figma file (collection `VariableCollectionId:40:28`, single mode
 "Default"). Each custom property is named after its Figma variable, so a change on
 either side has an obvious counterpart on the other. Everything further down
-composes from these — no page rule carries a raw hex.
+composes from these - no page rule carries a raw hex.
 
 | Token | Value | Role |
 | --- | --- | --- |
@@ -125,12 +125,12 @@ composes from these — no page rule carries a raw hex.
 
 `--grid-line`: Figma's 0.5px grid strokes resolve to a 1px line at 50% alpha
 (measured off the export, which renders these correctly). The Figma variable is
-the opaque base colour, `#c90000` — matching the strokes as authored; the `0.5`
+the opaque base colour, `#c90000` - matching the strokes as authored; the `0.5`
 in the stylesheet is emulating that sub-pixel rasterisation, not a colour choice,
 which is why the two values differ.
 
 `--stroke-alpha` / `--stroke`: the desktop tagline box is the one stroke still
-drawn by CSS — it was not among the brush exports. Dial the alpha if it reads
+drawn by CSS - it was not among the brush exports. Dial the alpha if it reads
 heavier than the brushed lines around it.
 
 ### Scaling
@@ -144,7 +144,7 @@ they stay crisp at reduced scale.
 poster is drawn edge to edge and the page scrolls vertically whenever that makes
 it taller than the viewport. It used to be bound by both axes so that nothing ever
 scrolled, but on a phone the height was almost always the binding one and the
-poster shrank to roughly three quarters of the screen — a narrow column of drawing
+poster shrank to roughly three quarters of the screen - a narrow column of drawing
 with empty ground down either side.
 
 The divisor is not the raw canvas but the INKED extent plus a margin, so the
@@ -168,8 +168,8 @@ across two rows.
 
 ### body
 
-Nothing is meant to overflow horizontally — the stage is built to the viewport
-width — so `overflow-x: hidden` is a backstop against sub-pixel rounding and
+Nothing is meant to overflow horizontally - the stage is built to the viewport
+width - so `overflow-x: hidden` is a backstop against sub-pixel rounding and
 against `100vw` over-reporting by the width of a scrollbar, not the thing keeping
 the poster in place. It cannot be the thing: a clipped overflow still drags under a
 finger on iOS.
@@ -183,7 +183,7 @@ No `touch-action` here: pinch-zoom must still pan in both axes.
 
 ### .grain
 
-`Film_Grain` is `children[0]` in Figma — the BOTTOM layer. It shows through
+`Film_Grain` is `children[0]` in Figma - the BOTTOM layer. It shows through
 unfilled frames but is covered by the tagline box's opaque fill. Verified: the
 tagline interior in Figma's export is flat `#d3c7b7`, std 0.0. Covers the viewport,
 not just the stage, so the texture reads on any screen size.
@@ -191,8 +191,8 @@ not just the stage, so the texture reads on any screen size.
 ### .stage
 
 The phone box is the scroll height, not the height of the Figma frame: 1018 = the
-inked extent's bottom edge at 994 — the Strava button's brush, 2px below
-`.box--link`'s rect edge at 992 (864 top + 128 height) — plus a 24px bottom
+inked extent's bottom edge at 994 - the Strava button's brush, 2px below
+`.box--link`'s rect edge at 992 (864 top + 128 height) - plus a 24px bottom
 margin. The top margin needs no help; the composition's own empty band above the
 logo at y=54 supplies it.
 
@@ -203,16 +203,16 @@ ground respectively, below their shorter compositions.
 
 The width is the 380 the scale was fitted to, NOT the canvas's 390: at 390 the
 stage is wider than the viewport by its empty right-hand gutter, and an overflow
-that is merely clipped is still an overflow — iOS hands the user a horizontal drag
+that is merely clipped is still an overflow - iOS hands the user a horizontal drag
 over it. So the box is cut to the fitted width and the shift slides the composition
 into it, left 5, which puts the inked extent (x 10..380) at 5..375 and leaves the
 5px margin on each side.
 
 It is a transform, not an edit to the children's x offsets, so the Figma
-coordinates stay a faithful transcription — the composition is moved as a unit,
+coordinates stay a faithful transcription - the composition is moved as a unit,
 exactly as it is scaled as a unit. What the shift pushes past the viewport is 5
 design px of empty gutter off the LEFT edge, and a box's left overflow is not
-scrollable in a left-to-right page — so there is nothing to drag in either
+scrollable in a left-to-right page - so there is nothing to drag in either
 direction. Vertically there is no shift: the canvas's own band above the logo at
 y=54 is the top margin, and where the viewport is taller than the poster, body's
 flex centring places it.
@@ -224,12 +224,12 @@ overflows.
 
 ### Boxes
 
-- `.box--title` — `clipsContent: true`
-- `.box--runners` — `clipsContent: true` (runner clipped)
-- `.box--exercises` — `clipsContent: false`
-- `.panel` — `overflow: hidden` clips the grid gradients; the stroke is a brush
+- `.box--title` - `clipsContent: true`
+- `.box--runners` - `clipsContent: true` (runner clipped)
+- `.box--exercises` - `clipsContent: false`
+- `.panel` - `overflow: hidden` clips the grid gradients; the stroke is a brush
   layer.
-- `.logo` on phone is lifted 10 off Figma's y=64 — the top margin is now real page
+- `.logo` on phone is lifted 10 off Figma's y=64 - the top margin is now real page
   space above a scrolling poster, not the empty band inside a fitted frame.
 
 The `background-position` values on `.stage::before` are each the frame origin
@@ -246,8 +246,8 @@ minus the brush overflow:
 ### Strava link button
 
 Figma component "Link button" (`33:1764`), variants Default / Hover. Same brush box
-as the other frames — weight 4, `strokeAlign: CENTER`, so its outline export
-overflows the rect by 2px like the title box — drawn by `.stage::before`, which is
+as the other frames - weight 4, `strokeAlign: CENTER`, so its outline export
+overflows the rect by 2px like the title box - drawn by `.stage::before`, which is
 why nothing in `.box--link` paints a border.
 
 The `<a>` is the whole box, not just the label: the Hover variant fills the entire
@@ -260,7 +260,7 @@ Vertical placement is flex centring rather than Figma's 35.67 padding: the
 instances are 128 tall against the component's 129.34, and centring the 58px
 two-line label is what puts it at y=35 in both.
 
-`:focus-visible` is not in the Figma file — it is the keyboard equivalent of the
+`:focus-visible` is not in the Figma file - it is the keyboard equivalent of the
 Hover state, so the one interactive element on the page is reachable without a
 mouse.
 
@@ -276,7 +276,7 @@ the bottom stroke that the design calls for.
 
 ### Tagline
 
-The fill is opaque so the graph-paper rules stop at the box edge — which also hides
+The fill is opaque so the graph-paper rules stop at the box edge - which also hides
 the `.grain` layer underneath. The texture is re-composited here from the same
 image, under a flat scrim of the box fill at 80% (reproducing `.grain`'s 0.20
 opacity).
@@ -286,33 +286,33 @@ written in viewport units rather than the `cover` keyword: the image is 1440x102
 so a width of `max(100vw, 140.625vh)` with auto height is that exact cover scale.
 Stated this way the grain matches the surrounding page even where
 `background-attachment: fixed` degrades to scroll (iOS Safari) and the positioning
-area becomes the box — only the crop shifts, never the scale, and a shifted crop of
+area becomes the box - only the crop shifts, never the scale, and a shifted crop of
 noise is indistinguishable.
 
 `.panel::after` (the horizontal rules) is effectively the panel's last child, so it
-would paint over this opaque box without an explicit stacking bump — hence
+would paint over this opaque box without an explicit stacking bump - hence
 `z-index: 1`.
 
-No stroke on the phone tagline box — the desktop one has a 1px INSIDE stroke, this
+No stroke on the phone tagline box - the desktop one has a 1px INSIDE stroke, this
 variant has none.
 
 ### Tabs
 
-The strip is 366 wide with 122-wide cells at BOTH breakpoints — the phone content
-column is also 366, and 366 = 3 x 122 — so only `left` changes between them.
+The strip is 366 wide with 122-wide cells at BOTH breakpoints - the phone content
+column is also 366, and 366 = 3 x 122 - so only `left` changes between them.
 
 The active cell is `--red` filled with a `--ground` label and
 `mix-blend-mode: color-burn`, which is why it samples ~#d10000 rather than
 #e30b19; that is the burn against the ground, not a different red.
 
-This burn (and the `.i` icons' own `color-burn`, below) went dead on phone —
+This burn (and the `.i` icons' own `color-burn`, below) went dead on phone -
 reported as "the blend mode doesn't work" on iPhone Chrome, but reproduced
 identically in desktop Chromium and WebKit at a 390px viewport, so it was
 never iOS-specific. `.stage` carried `transform: translateX(-5rem)` at phone
 width to nudge the 380-wide stage left by 5rem; any transform value other
 than `none` establishes a new stacking context AND a new containing block for
 fixed-position/fixed-attachment descendants (CSS Transforms spec), so every
-blend inside `.stage` — the active tab, the runner/rope/lifter icons — could
+blend inside `.stage` - the active tab, the runner/rope/lifter icons - could
 only see backdrop painted inside that isolated group, which is nothing
 (`.stage` itself paints no background), not `.grain` or the `--ground` body
 fill sitting outside it. `.stage` is `position: relative`, so `left: -5rem`
@@ -329,7 +329,7 @@ fill stopping just above it. This falls out for free: the strip is a `.stage`
 child and `.stage::before` composites every brush export above all children at
 `z-index: 2`. No per-active-state exports, no z-index juggling.
 
-`.stage::before` is split — shared properties on `.stage::before`, the per-view
+`.stage::before` is split - shared properties on `.stage::before`, the per-view
 layer lists on `.stage--start` / `.stage--log` / `.stage--shop`.
 
 ### The log table
@@ -342,11 +342,11 @@ substitute for it. Do not "simplify" it to a yellow token.
 What the blue is differenced AGAINST is the load-bearing part, and it is the
 textured paper, not a flat `var(--ground)` swatch. In Figma the row's fill
 blends with the composition beneath it, which is Film_Grain over the ground, so
-the grain runs through the band at full strength — the frame measures red-channel
+the grain runs through the band at full strength - the frame measures red-channel
 std 5.38 across a band against 5.55 on the ground beside it. Differencing
 against a flat swatch gives the correct MEAN (`|#d8ccbc - #0000ff| = #d8cc43`,
 which is what every median-based check in `tools/verify.py` samples) and a
-dead-flat slab: std 0.00. That flatness — not the hue — is what read wrong
+dead-flat slab: std 0.00. That flatness - not the hue - is what read wrong
 against the frame, and it survived a full verification pass because every
 colour assertion in this repo is a median or a mean. `tools/verify.py log` and
 the phone block now assert `spread(...) > 3.0` / `> 1.5` per banded row, which
@@ -355,7 +355,7 @@ fails at std 0.00 on the old construction.
 So the paper is REBUILT inside the cell's own background stack, bottom to top:
 `background-color: var(--ground)`, the grain image, an 80%-opaque ground wash
 over it, then blue differenced over the pair. The wash is how `.grain`'s
-`opacity: 0.20` is expressed — background layers have no per-layer opacity —
+`opacity: 0.20` is expressed - background layers have no per-layer opacity -
 and it is the same reconstruction `.tagline` already does. `background-size:
 max(100vw, 140.625vh) auto` + `background-position: center` +
 `background-attachment: fixed` anchor the grain layer to the VIEWPORT exactly
@@ -363,18 +363,18 @@ as `.grain`'s `position: fixed` + `object-fit: cover` do (140.625vh is
 `100vh x 1440/1024`, the image's aspect, which is what makes the two agree).
 Verified aligned, not merely similar: rendered against a control page with the
 band suppressed, the band's R and G match the bare paper's at the same pixels
-to within 2/255, and B is its exact inversion to within 2 — a misaligned grain
+to within 2/255, and B is its exact inversion to within 2 - a misaligned grain
 would differ by the grain's own range, ~25.
 
 Reconstructing rather than blending against the real backdrop is also what
 makes this work at both breakpoints. `mix-blend-mode: difference` on the cell
 does see the real grain, but blends the cell's own text too (`#7f1010` renders
 `#b2c806`, measured); and `.stage` used to carry a `transform` at phone width
-(see the Tabs section above — since replaced with `left`), which made it a
+(see the Tabs section above - since replaced with `left`), which made it a
 stacking context and therefore an isolated group, so a blend inside it could
 not reach `.grain` at all. A background stack has no dependency on what is
 painted behind the element, which is why the desktop cell and the phone row
-`::after` can carry the identical layer list — true regardless of which of
+`::after` can carry the identical layer list - true regardless of which of
 those two reasons applies at a given breakpoint.
 
 `background-color: blue` alone does NOT work in place of the blue gradient
@@ -388,10 +388,10 @@ The band is painted as the cell's own `background-image` (two stacked
 NOT a `::before`. An absolutely positioned `::before` paints in a later phase
 than the cell's in-flow text and gets caught by its own `mix-blend-mode`,
 inverting the glyphs along with the ground (`#7f1010` ink reads as `#7f10ef`
-under the band — verified by `tools/verify.py log`, which samples row text for
+under the band - verified by `tools/verify.py log`, which samples row text for
 this). A `background-image` paints in the background layer, guaranteed below
 content, so the dark-red ink stays dark-red on top of the yellow band. Do not
-reach for `z-index: -1` on a `::before` instead — that joins the root stacking
+reach for `z-index: -1` on a `::before` instead - that joins the root stacking
 context and lands under `.grain` at `z-index: 0`, washing the band out.
 
 The header's `padding-bottom: 32rem` is the drawn 8px header padding plus the
@@ -404,8 +404,8 @@ EMPTY row 39px tall: a `<td>` with no light-DOM children gets no line box in thi
 renderer, so the height alone still collapses (loses `padding: 8rem 0`, landing
 at 23rem not 39rem) and the banding drops out on a short feed. The
 `.log tbody td:empty::after { content: "\00a0"; }` rule just below restores the
-line box for any genuinely empty cell — a padded row from `log.js`'s `pad()`, or
-a real feed entry with a blank field — so `height: 23rem` plus that generated
+line box for any genuinely empty cell - a padded row from `log.js`'s `pad()`, or
+a real feed entry with a blank field - so `height: 23rem` plus that generated
 nbsp is what actually holds the row at 39rem. See `## js/` further down for how
 `pad()`'s `EMPTY` rows exercise this.
 
@@ -414,14 +414,14 @@ of the hardcoded stat values (e.g. "8.2 KM") measure wider than a stat column
 sized for Figma's 5-character placeholder ("index") at Overpass Mono's real
 advance width, and without `nowrap` the space before the unit becomes a
 soft-wrap point, doubling that row's height and knocking every following row
-off the 39rem pitch (verified by sampling row bands in `tools/verify.py log` —
+off the 39rem pitch (verified by sampling row bands in `tools/verify.py log` -
 omitting `nowrap` flips rows 2-5 and 10 and paints an 11th row below y=800).
 Single-line rows are load-bearing for the fixed 39rem pitch, not just tidy.
 
 Column widths are `218 / 319 / 118 / 88`, not the drawn `218 / 351 / 118 / 56`:
 the drawn 56rem stat column was sized for the 5-character placeholder and is
 too narrow for real values ("31.7 KM", "1:04:20", ~81rem at 18rem Overpass
-Mono) — with `nowrap` in place those values overflowed rightward past the box's
+Mono) - with `nowrap` in place those values overflowed rightward past the box's
 own interior and out through its brush border rather than wrapping. Activity
 gives up exactly the 32rem stat needs (351 → 319) and stat gains that same
 32rem (56 → 88), so the four still sum to the drawn 743. Activity was picked
@@ -523,12 +523,12 @@ should be re-transcribed and re-exported rather than assumed still correct.
 
 ## og.html
 
-SOURCE for `assets/og-image.png` — the link preview served by the `og:image` tag in
+SOURCE for `assets/og-image.png` - the link preview served by the `og:image` tag in
 `index.html`. Not linked from the site; it exists so the card can be re-rendered if
 the mark or the ground ever changes.
 
 The card is the squared BIC mark and nothing else. Its letters already step down to
-the right, so the diagonal is the whole composition — no title box, no icon strip,
+the right, so the diagonal is the whole composition - no title box, no icon strip,
 no wordmark. At the size a link preview is actually shown, that is the only part
 that stays readable anyway.
 
@@ -558,7 +558,7 @@ python -c "from PIL import Image; i=Image.open('card@2x.png').convert('RGB'); \
 
 `activities.js` is placeholder data and nothing else. `log.js` owns the only seam
 that matters: `loadActivities()`. When the Strava integration lands it replaces
-that one function — a fetch of a generated JSON file, most likely, since Strava
+that one function - a fetch of a generated JSON file, most likely, since Strava
 needs OAuth and a token cannot live in a static page. Nothing else in `log.js`
 knows where rows come from.
 
@@ -566,13 +566,13 @@ knows where rows come from.
 791x525 with one border export, so `pad()` fills a short feed and `slice()`
 truncates a long one. Changing the row count means re-exporting the border.
 
-Both are classic scripts loaded in order, NOT modules — `type="module"` is blocked
+Both are classic scripts loaded in order, NOT modules - `type="module"` is blocked
 by CORS on `file://`, and both `tools/verify.py` and the `og.html` recipe render
 local files.
 
 `EMPTY`'s fields are genuinely empty strings (`""`), matching a real feed's
 blank field. A truly empty `<td>` would otherwise lose its line box and its
-39rem row height — see the `.log tbody td:empty::after` rule in `style.css`'s
+39rem row height - see the `.log tbody td:empty::after` rule in `style.css`'s
 `### The log table` section, which is what actually keeps a padded (or
 blank-field) row banded.
 
@@ -581,7 +581,7 @@ blank-field) row banded.
 ## tools/verify.py
 
 Renders each page in headless Chrome and asserts measured pixel facts against the
-Figma frames — the same sampling that settled the v2 design questions, kept
+Figma frames - the same sampling that settled the v2 design questions, kept
 runnable so a change that breaks the composition fails loudly.
 
 ```sh
@@ -596,12 +596,12 @@ the top is a Windows absolute path; change it to suit the machine.
 The phone suite renders at `PHONE = (760, 2040)`, not the stage's nominal
 380x1018: Chrome on Windows clamps a headless window's requested width to
 roughly 500px, so asking for 380 silently produced a 512px viewport and
-rendered the phone stage zoomed and clipped — every phone measurement was
+rendered the phone stage zoomed and clipped - every phone measurement was
 wrong until that clamp was found. 760 is exactly 2x the 380rem stage width and
 still comfortably under the 768px desktop breakpoint, so `PHONE_SCALE = 2` and
 every phone expectation in the file is just its rem value doubled. That trap
 cost real debugging time before it was traced to the window size, not the
-markup — worth knowing before re-measuring PHONE on a different machine.
+markup - worth knowing before re-measuring PHONE on a different machine.
 
 What it deliberately cannot check: focus-visible states and keyboard order, which
 are a manual pass in a real browser.

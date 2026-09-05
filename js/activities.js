@@ -1,4 +1,4 @@
-/* Placeholder club feed. Replaced wholesale when the Strava API lands —
+/* Placeholder club feed. Replaced wholesale when the Strava API lands -
    see loadActivities() in log.js, which is the only seam that matters. */
 const ACTIVITIES = [
   { member: "max w.",   activity: "morning shakeout",  date: "30 aug-26", stat: "8.2 km"  },

@@ -358,8 +358,8 @@ body {
 /* A td with no light-DOM children gets no line box in this renderer, so its
    height:23rem collapses (loses the padding above, landing at 23rem not
    39rem) and a padded row loses its band. :empty still matches after this
-   generates content, so a genuinely empty cell — padded or a real feed's
-   blank field alike — keeps a line box and its full 39rem row height. */
+   generates content, so a genuinely empty cell - padded or a real feed's
+   blank field alike - keeps a line box and its full 39rem row height. */
 .log tbody td:empty::after { content: "\00a0"; }
 
 /* The band differences blue against the TEXTURED paper, not against a flat

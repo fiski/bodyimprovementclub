@@ -1,4 +1,4 @@
-# Version 2 — Menu and Log of Gains Implementation Plan
+# Version 2 - Menu and Log of Gains Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,14 +8,14 @@
 
 **Tech Stack:** Hand-written HTML/CSS/vanilla JS, no build step, no dependencies. Google Fonts (Bungee Shade, Major Mono Display, Overpass Mono). Verification via headless Chrome + Python/PIL pixel assertions.
 
-**Spec:** `docs/superpowers/specs/2026-08-31-v2-menu-and-log-of-gains-design.md` — read it before starting; this plan argues from it and does not restate its reasoning.
+**Spec:** `docs/superpowers/specs/2026-08-31-v2-menu-and-log-of-gains-design.md` - read it before starting; this plan argues from it and does not restate its reasoning.
 
 ## Global Constraints
 
 - **`1rem` = one Figma pixel.** Every geometry value in this plan is a raw Figma pixel and is written in `rem`. Never write `px` for layout.
 - **Desktop stage** 1440x1024; `html { font-size: min(1px, calc(100vw / 1440), calc(100svh / 1024)) }` (already in `style.css`).
 - **Phone stage** 380x946 at `< 768px`; `html { font-size: calc(100vw / 380) }` (already in `style.css`).
-- **Content box, all views:** `left: 324rem; top: 286rem; width: 791rem`. Never 325, never 799 — see the spec's "The 799-vs-791 drift".
+- **Content box, all views:** `left: 324rem; top: 286rem; width: 791rem`. Never 325, never 799 - see the spec's "The 799-vs-791 drift".
 - **Tab strip:** `left: 324rem; top: 236rem; width: 366rem; height: 50rem`; three cells of `122rem`.
 - **Colours** come from the eight existing `:root` tokens. Exactly one new colour appears in v2 and it is **not** a token: the row band is `background: blue` with `mix-blend-mode: difference`.
 - **No new CSS `border` on any box.** Every visible box edge is a brush SVG on the overlay.
@@ -45,7 +45,7 @@
 
 ### Task 1: Fix the Figma frame and export the two new brush borders
 
-The log box is drawn 799 wide but its row grid sums to the 743 interior a 791 box implies. Fix the file so Figma and code agree, then export. Nothing in the repo renders differently after this task — it only adds assets.
+The log box is drawn 799 wide but its row grid sums to the 743 interior a 791 box implies. Fix the file so Figma and code agree, then export. Nothing in the repo renders differently after this task - it only adds assets.
 
 **Files:**
 - Create: `assets/borders/border-tabs.svg`
@@ -54,7 +54,7 @@ The log box is drawn 799 wide but its row grid sums to the 743 interior a 791 bo
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: `assets/borders/border-tabs.svg` at **370x54** and `assets/borders/border-table-d.svg` at **795x529** — both are exports of a frame plus 2px of brush overflow on every side, the same convention as the five existing exports. Tasks 3, 4, 5 and 8 position these on the overlay.
+- Produces: `assets/borders/border-tabs.svg` at **370x54** and `assets/borders/border-table-d.svg` at **795x529** - both are exports of a frame plus 2px of brush overflow on every side, the same convention as the five existing exports. Tasks 3, 4, 5 and 8 position these on the overlay.
 
 - [ ] **Step 1: Load the Figma write skill**
 
@@ -78,7 +78,7 @@ for (const id of ids) {
 }
 ```
 
-Expected: the `Table` main component reports `799x533`, the `Menu` main component `366x50`. Record both main component ids — later steps need them.
+Expected: the `Table` main component reports `799x533`, the `Menu` main component `366x50`. Record both main component ids - later steps need them.
 
 - [ ] **Step 3: Resize the Table component to 791x525**
 
@@ -92,7 +92,7 @@ const rows = table.findOne(n => n.name === 'Rows');
 console.log('rows width', rows.width);   // expect 743
 ```
 
-Expected: `791x525`, and `rows width 743`. If `Rows` does not report 743, STOP — the layout is not resizing as the spec predicted, and the reconciliation needs rechecking before any code is written.
+Expected: `791x525`, and `rows width 743`. If `Rows` does not report 743, STOP - the layout is not resizing as the spec predicted, and the reconciliation needs rechecking before any code is written.
 
 - [ ] **Step 4: Export the table border outline**
 
@@ -110,13 +110,13 @@ console.log('bytes', bytes.length);
 figma.ui.postMessage({ svg: String.fromCharCode(...bytes) });
 ```
 
-Expected: an SVG whose root `width`/`height` are **795x529**. If the export instead reports 791x525, the brush overflow was not included — check `strokeAlign` is `CENTER` before continuing.
+Expected: an SVG whose root `width`/`height` are **795x529**. If the export instead reports 791x525, the brush overflow was not included - check `strokeAlign` is `CENTER` before continuing.
 
 Save it to `assets/borders/border-table-d.svg`.
 
 - [ ] **Step 5: Export the tab strip outline**
 
-Fills must be dropped so the export is stroke-only — the active cell's red fill is done in CSS, not baked into the border:
+Fills must be dropped so the export is stroke-only - the active cell's red fill is done in CSS, not baked into the border:
 
 ```js
 const src = await figma.getNodeByIdAsync('<MENU_MAIN_ID>');
@@ -144,7 +144,7 @@ grep -c '#0000FF\|#0000ff' border-table-d.svg || echo "no blue bands: good"
 grep -o '#D8CCBC\|#d8ccbc' border-table-d.svg | head
 ```
 
-Expected: root elements `width="370" height="54"` and `width="795" height="529"`; **zero** matches for `#7F1010` (text) and `#0000FF` (bands). If a `#D8CCBC` full-bleed ground rect is present, delete that one `<rect>` element by hand — a direct export of a node inside a frame includes the parent's background, which would paint an opaque slab over the composition.
+Expected: root elements `width="370" height="54"` and `width="795" height="529"`; **zero** matches for `#7F1010` (text) and `#0000FF` (bands). If a `#D8CCBC` full-bleed ground rect is present, delete that one `<rect>` element by hand - a direct export of a node inside a frame includes the parent's background, which would paint an opaque slab over the composition.
 
 - [ ] **Step 7: Record the geometry in NOTES.md**
 
@@ -155,7 +155,7 @@ Append to `NOTES.md` under `## style.css`, after the "Brush strokes" section:
 
 `border-tabs.svg` (370x54) is the tab strip: the `Menu` component with every cell
 fill and label removed, so it is stroke-only. The active cell's red fill is CSS,
-not baked in — otherwise it could not move between pages.
+not baked in - otherwise it could not move between pages.
 
 `border-table-d.svg` (795x529) is the log/shop box. The `Table` component was
 drawn 799x533 but its row grid sums to 743, the interior a 791 box implies
@@ -181,7 +181,7 @@ Written before any page work so every later task has a failing assertion driving
 
 **Interfaces:**
 - Consumes: nothing from Task 1.
-- Produces: `python tools/verify.py [page…]` — exits `0` if all checks pass, `1` otherwise, printing one `PASS`/`FAIL` line per check. Helper functions `ink_runs(im, y, x0, x1)` → list of `(start, end)` red-ink runs, and `median(im, x0, x1, y0, y1)` → `(r, g, b)`. Tasks 3–9 add `CHECKS` entries and run this.
+- Produces: `python tools/verify.py [page…]` - exits `0` if all checks pass, `1` otherwise, printing one `PASS`/`FAIL` line per check. Helper functions `ink_runs(im, y, x0, x1)` → list of `(start, end)` red-ink runs, and `median(im, x0, x1, y0, y1)` → `(r, g, b)`. Tasks 3-9 add `CHECKS` entries and run this.
 
 - [ ] **Step 1: Write the harness**
 
@@ -385,7 +385,7 @@ if __name__ == "__main__":
 python tools/verify.py index
 ```
 
-Expected: FAIL. `index.html` is still v1 — there is no tab strip, so "active tab 0 is colour-burned red" and the "top brush line present under tab N" checks fail. The `box spans x=324..1115` check should already PASS, since v1's boxes are already 791 wide at 324. If that one fails, the harness's coordinate mapping is wrong and must be fixed before any page work.
+Expected: FAIL. `index.html` is still v1 - there is no tab strip, so "active tab 0 is colour-burned red" and the "top brush line present under tab N" checks fail. The `box spans x=324..1115` check should already PASS, since v1's boxes are already 791 wide at 324. If that one fails, the harness's coordinate mapping is wrong and must be fixed before any page work.
 
 - [ ] **Step 3: Confirm the other three suites fail on missing files**
 
@@ -393,7 +393,7 @@ Expected: FAIL. `index.html` is still v1 — there is no tab strip, so "active t
 python tools/verify.py log shop phone
 ```
 
-Expected: errors or failures — `log-of-gains.html` and `shop.html` do not exist yet. This confirms the harness is actually loading the pages rather than silently passing.
+Expected: errors or failures - `log-of-gains.html` and `shop.html` do not exist yet. This confirms the harness is actually loading the pages rather than silently passing.
 
 - [ ] **Step 4: Commit**
 
@@ -404,7 +404,7 @@ git commit -m "Add a pixel verification harness for the v2 compositions"
 
 ---
 
-### Task 3: The shell — fonts, tab strip, wordmark, on index.html
+### Task 3: The shell - fonts, tab strip, wordmark, on index.html
 
 Turns v1's `index.html` into the v2 START view. This is the task that makes the shared shell exist; Tasks 4 and 5 copy it.
 
@@ -500,7 +500,7 @@ In `style.css`, after the `.box--link` rules:
 }
 ```
 
-`.tabs` needs no `position` — `.stage > *` already makes every direct child absolute.
+`.tabs` needs no `position` - `.stage > *` already makes every direct child absolute.
 
 - [ ] **Step 6: Add the shared geometry, and move the wordmark**
 
@@ -519,7 +519,7 @@ Then in the `@media (min-width: 768px)` block, change `.logo`'s top from `129rem
   .tabs { left: 324rem; top: 236rem; }
 ```
 
-The strip is `366rem` wide and its cells `122rem` at **both** breakpoints, so only `left` differs — the phone content column is also 366 wide. That is why there is no phone tab variant.
+The strip is `366rem` wide and its cells `122rem` at **both** breakpoints, so only `left` differs - the phone content column is also 366 wide. That is why there is no phone tab variant.
 
 - [ ] **Step 7: Composite the tab border onto the overlay**
 
@@ -557,7 +557,7 @@ The current `.stage::before` rules are unconditional. Scope them so each page ge
 }
 ```
 
-Every tabs layer is positioned at (strip origin − 2rem) at its natural 370x54 — the same "frame origin minus overflow" rule the five existing layers follow. Phone strip origin is (12, 236), so the layer sits at (10, 234).
+Every tabs layer is positioned at (strip origin − 2rem) at its natural 370x54 - the same "frame origin minus overflow" rule the five existing layers follow. Phone strip origin is (12, 236), so the layer sits at (10, 234).
 
 Do the same inside the media query, adding the tabs layer first with position `322rem 234rem` (desktop origin (324, 236) − 2) and size `370rem 54rem`, and renaming that selector to `.stage--start::before` too.
 
@@ -582,7 +582,7 @@ and leave only `background-image` / `-position` / `-size` in the `.stage--start:
 python tools/verify.py index
 ```
 
-Expected: PASS on every `index` check, including "top brush line present under tab 1/2/3" — which passes only because `.stage::before` paints above the strip. If the line is missing under the active tab, the strip is painting above the overlay; do not "fix" this by reordering, check `z-index: 2` survived Step 7.
+Expected: PASS on every `index` check, including "top brush line present under tab 1/2/3" - which passes only because `.stage::before` paints above the strip. If the line is missing under the active tab, the strip is painting above the overlay; do not "fix" this by reordering, check `z-index: 2` survived Step 7.
 
 - [ ] **Step 9: Record the two non-obvious bits in NOTES.md**
 
@@ -591,8 +591,8 @@ Append under `## style.css`:
 ```markdown
 ### Tabs
 
-The strip is 366 wide with 122-wide cells at BOTH breakpoints — the phone content
-column is also 366, and 366 = 3 x 122 — so only `left` changes between them.
+The strip is 366 wide with 122-wide cells at BOTH breakpoints - the phone content
+column is also 366, and 366 = 3 x 122 - so only `left` changes between them.
 
 The active cell is `--red` filled with a `--ground` label and
 `mix-blend-mode: color-burn`, which is why it samples ~#d10000 rather than
@@ -605,7 +605,7 @@ fill stopping just above it. This falls out for free: the strip is a `.stage`
 child and `.stage::before` composites every brush export above all children at
 `z-index: 2`. No per-active-state exports, no z-index juggling.
 
-`.stage::before` is split — shared properties on `.stage::before`, the per-view
+`.stage::before` is split - shared properties on `.stage::before`, the per-view
 layer lists on `.stage--start` / `.stage--log` / `.stage--shop`.
 ```
 
@@ -625,7 +625,7 @@ The simplest page carrying the shell. Built before the log view so the shell's r
 **Files:**
 - Create: `shop.html`
 - Modify: `style.css`
-- Modify: `tools/verify.py` (nothing — `check_shop` already exists)
+- Modify: `tools/verify.py` (nothing - `check_shop` already exists)
 
 **Interfaces:**
 - Consumes: the shell markup from Task 3; `border-table-d.svg` (795x529) from Task 1.
@@ -637,7 +637,7 @@ The simplest page carrying the shell. Built before the log view so the shell's r
 python tools/verify.py shop
 ```
 
-Expected: failure — `shop.html` does not exist.
+Expected: failure - `shop.html` does not exist.
 
 - [ ] **Step 2: Create shop.html**
 
@@ -649,14 +649,14 @@ Copy `index.html`'s shell verbatim, move `aria-current` to the shop tab, swap th
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Shop — Body Improvement Club</title>
+<title>Shop - Body Improvement Club</title>
 <meta name="description" content="Body Improvement Club >>> club kit, coming soon.">
 
 <link rel="canonical" href="https://bodyimprovement.club/shop.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Body Improvement Club">
 <meta property="og:url" content="https://bodyimprovement.club/shop.html">
-<meta property="og:title" content="Shop — Body Improvement Club">
+<meta property="og:title" content="Shop - Body Improvement Club">
 <meta property="og:description" content="Body Improvement Club >>> club kit, coming soon.">
 <meta property="og:image" content="https://bodyimprovement.club/assets/og-image.png">
 <meta property="og:image:type" content="image/png">
@@ -765,7 +765,7 @@ and in the media query:
 python tools/verify.py shop
 ```
 
-Expected: PASS on all `shop` checks — box spanning 324..1115, top line continuous, tab 2 burned red, tabs 0 and 1 unfilled.
+Expected: PASS on all `shop` checks - box spanning 324..1115, top line continuous, tab 2 burned red, tabs 0 and 1 unfilled.
 
 - [ ] **Step 5: Commit**
 
@@ -787,7 +787,7 @@ Geometry first, with the ten rows hardcoded, so the box, columns, type and bandi
 
 **Interfaces:**
 - Consumes: the shell from Task 3; `border-table-d.svg` from Task 1.
-- Produces: the `.box--table` / `.log` CSS and the exact `<table>` structure — `<colgroup>` of four `<col>` (`c-member`, `c-activity`, `c-date`, `c-stat`), a `<thead>` of four `<th scope="col">`, and a `<tbody>` of ten `<tr>` each with four bare `<td>` in member/activity/date/stat order. Task 6's `render()` must produce exactly this `<tbody>` shape.
+- Produces: the `.box--table` / `.log` CSS and the exact `<table>` structure - `<colgroup>` of four `<col>` (`c-member`, `c-activity`, `c-date`, `c-stat`), a `<thead>` of four `<th scope="col">`, and a `<tbody>` of ten `<tr>` each with four bare `<td>` in member/activity/date/stat order. Task 6's `render()` must produce exactly this `<tbody>` shape.
 
 - [ ] **Step 1: Run the failing check**
 
@@ -795,18 +795,18 @@ Geometry first, with the ten rows hardcoded, so the box, columns, type and bandi
 python tools/verify.py log
 ```
 
-Expected: failure — `log-of-gains.html` does not exist.
+Expected: failure - `log-of-gains.html` does not exist.
 
 - [ ] **Step 2: Create log-of-gains.html**
 
 Same `<head>` as `shop.html` with the shop strings replaced by:
 
 ```html
-<title>Log of Gains — Body Improvement Club</title>
+<title>Log of Gains - Body Improvement Club</title>
 <meta name="description" content="Body Improvement Club >>> the club's most recent gains, logged.">
 <link rel="canonical" href="https://bodyimprovement.club/log-of-gains.html">
 <meta property="og:url" content="https://bodyimprovement.club/log-of-gains.html">
-<meta property="og:title" content="Log of Gains — Body Improvement Club">
+<meta property="og:title" content="Log of Gains - Body Improvement Club">
 <meta property="og:description" content="Body Improvement Club >>> the club's most recent gains, logged.">
 ```
 
@@ -850,7 +850,7 @@ Same shell, with `stage--log` and `aria-current` on the middle tab, then:
 
 - [ ] **Step 3: Add the table CSS**
 
-In `style.css`, phone block first — but write the desktop-correct interior here and override only widths later, since the type and paddings are the same:
+In `style.css`, phone block first - but write the desktop-correct interior here and override only widths later, since the type and paddings are the same:
 
 ```css
 .box--table {
@@ -1013,7 +1013,7 @@ Swap the static rows for rendered ones behind a single seam, and prove nothing m
 
 **Interfaces:**
 - Consumes: the `<tbody>` shape defined in Task 5.
-- Produces: `ACTIVITIES` — an array of `{ member, activity, date, stat }` string objects; `loadActivities()` → `Promise<Array>`, the single function the Strava integration replaces; `pad(rows, n)` → array of exactly `n` rows; `render(rows, tbody)` → void.
+- Produces: `ACTIVITIES` - an array of `{ member, activity, date, stat }` string objects; `loadActivities()` → `Promise<Array>`, the single function the Strava integration replaces; `pad(rows, n)` → array of exactly `n` rows; `render(rows, tbody)` → void.
 
 - [ ] **Step 1: Capture the static render as the baseline**
 
@@ -1035,7 +1035,7 @@ Use a scratch path that suits your environment; `/tmp` here is illustrative. Con
 The same ten rows Task 5 hardcoded, so the diff in Step 6 is meaningful:
 
 ```js
-/* Placeholder club feed. Replaced wholesale when the Strava API lands —
+/* Placeholder club feed. Replaced wholesale when the Strava API lands -
    see loadActivities() in log.js, which is the only seam that matters. */
 const ACTIVITIES = [
   { member: "max w.",   activity: "morning shakeout",  date: "30 aug-26", stat: "8.2 km"  },
@@ -1105,7 +1105,7 @@ and add, just before `</body>`:
 <script src="js/log.js"></script>
 ```
 
-Plain classic scripts in order, no `type="module"` — modules are blocked by CORS on `file://`, and the whole verification harness renders local files.
+Plain classic scripts in order, no `type="module"` - modules are blocked by CORS on `file://`, and the whole verification harness renders local files.
 
 - [ ] **Step 5: Run the check**
 
@@ -1117,7 +1117,7 @@ Expected: PASS, identically to Task 5. Rows now come from JS.
 
 - [ ] **Step 6: Diff against the static baseline**
 
-The real assertion for this task — the swap must be invisible:
+The real assertion for this task - the swap must be invisible:
 
 ```bash
 python -c "
@@ -1131,7 +1131,7 @@ print('identical' if box is None else f'DIFFERS in {box}')
 "
 ```
 
-Expected: `identical`. Any difference means `render()` is not producing the `<tbody>` shape Task 5's CSS targets — most likely a wrong cell order or a stray wrapper element.
+Expected: `identical`. Any difference means `render()` is not producing the `<tbody>` shape Task 5's CSS targets - most likely a wrong cell order or a stray wrapper element.
 
 - [ ] **Step 7: Verify the padding path**
 
@@ -1157,7 +1157,7 @@ finally:
 PY
 ```
 
-Expected: `row 10 band #d8cc43 banded` — the tenth row is empty but still 39px tall and still carries its band. Then confirm `git diff --stat js/activities.js` is empty, i.e. the file was restored.
+Expected: `row 10 band #d8cc43 banded` - the tenth row is empty but still 39px tall and still carries its band. Then confirm `git diff --stat js/activities.js` is empty, i.e. the file was restored.
 
 - [ ] **Step 8: Note the seam in NOTES.md**
 
@@ -1170,7 +1170,7 @@ Append a new top-level section:
 
 `activities.js` is placeholder data and nothing else. `log.js` owns the only seam
 that matters: `loadActivities()`. When the Strava integration lands it replaces
-that one function — a fetch of a generated JSON file, most likely, since Strava
+that one function - a fetch of a generated JSON file, most likely, since Strava
 needs OAuth and a token cannot live in a static page. Nothing else in `log.js`
 knows where rows come from.
 
@@ -1178,7 +1178,7 @@ knows where rows come from.
 791x525 with one border export, so `pad()` fills a short feed and `slice()`
 truncates a long one. Changing the row count means re-exporting the border.
 
-Both are classic scripts loaded in order, NOT modules — `type="module"` is blocked
+Both are classic scripts loaded in order, NOT modules - `type="module"` is blocked
 by CORS on `file://`, and both `tools/verify.py` and the `og.html` recipe render
 local files.
 ```
@@ -1192,7 +1192,7 @@ git commit -m "Render the log rows from a data module"
 
 ---
 
-### Task 7: Phone breakpoint — tab strip and start view
+### Task 7: Phone breakpoint - tab strip and start view
 
 The strip already carries over; what needs settling is that it does not collide with the phone collage, whose title box currently starts at y=212.
 
@@ -1220,7 +1220,7 @@ shot('index.html', PHONE).save('/tmp/phone-start.png')
 "
 ```
 
-The strip is at y=236..286 while the phone title box is at y=214..385 — they overlap by 50px. Confirm that overlap is visible before fixing it.
+The strip is at y=236..286 while the phone title box is at y=214..385 - they overlap by 50px. Confirm that overlap is visible before fixing it.
 
 - [ ] **Step 2: Push the phone collage down by 74rem**
 
@@ -1295,7 +1295,7 @@ def check_phone(r):
 python tools/verify.py index shop log phone
 ```
 
-Expected: `index`, `shop` and `log` still PASS (desktop is untouched by this task), and `phone index.html` passes all three of its checks. `phone log-of-gains.html` will still fail its box-span check until Task 8 — note which failures are expected.
+Expected: `index`, `shop` and `log` still PASS (desktop is untouched by this task), and `phone index.html` passes all three of its checks. `phone log-of-gains.html` will still fail its box-span check until Task 8 - note which failures are expected.
 
 - [ ] **Step 6: Commit**
 
@@ -1306,7 +1306,7 @@ git commit -m "Seat the phone tab strip on the phone collage"
 
 ---
 
-### Task 8: Phone breakpoint — the log table reflow
+### Task 8: Phone breakpoint - the log table reflow
 
 The only invented geometry in v2. Four columns do not fit 366; each row becomes two lines.
 
@@ -1316,7 +1316,7 @@ The only invented geometry in v2. Four columns do not fit 366; each row becomes 
 - Modify: `NOTES.md`
 
 **Interfaces:**
-- Consumes: the `<table>` structure from Task 5 — unchanged, this is CSS-only reflow.
+- Consumes: the `<table>` structure from Task 5 - unchanged, this is CSS-only reflow.
 - Produces: `border-table-m.svg` and the final phone `.box--table` height, which `.stage--shop::before` and `.stage--log::before` both already reference.
 
 - [ ] **Step 1: See the overflow**
@@ -1386,11 +1386,11 @@ In `style.css`'s phone block, after the shared `.log` rules:
 }
 ```
 
-Row height becomes `8 + 20 + 20 + 8 = 56rem`, ten rows = 560, and the box `40 + 560 + 40 = 640` — which is where the `640rem` above comes from. The header is dropped: with member/activity labelled by position and weight, a four-column header cannot honestly label a two-line row, and `scope="col"` still serves assistive tech from the markup.
+Row height becomes `8 + 20 + 20 + 8 = 56rem`, ten rows = 560, and the box `40 + 560 + 40 = 640` - which is where the `640rem` above comes from. The header is dropped: with member/activity labelled by position and weight, a four-column header cannot honestly label a two-line row, and `scope="col"` still serves assistive tech from the markup.
 
 **Treat 640 as a prediction, not a fact.** Grid line-box rounding at a fractional `rem` will move it by a pixel or two. Step 3 measures the real value and corrects it; do not skip that step because the arithmetic looks clean.
 
-Here the rows are `display: grid`, so the band can move back onto the row itself — `position: relative` on a grid container is reliable where it is not on a table row. `z-index: -1` with `isolation: isolate` puts it behind the cell text without a stacking-context escape.
+Here the rows are `display: grid`, so the band can move back onto the row itself - `position: relative` on a grid container is reliable where it is not on a table row. `z-index: -1` with `isolation: isolate` puts it behind the cell text without a stacking-context escape.
 
 - [ ] **Step 3: Measure the real box height**
 
@@ -1410,7 +1410,7 @@ Set `.box--table`'s phone `height` so the box bottom clears the last row by the 
 
 - [ ] **Step 4: Export the phone border**
 
-Repeat Task 1's Step 4 clone-and-export against a temporary Figma frame resized to `366 x <the height from Step 3>`, or — since no phone frame exists to transcribe — scale `border-table-d.svg` to the phone box. Prefer the scale: the brush texture is the same line and a phone frame does not exist to be faithful to.
+Repeat Task 1's Step 4 clone-and-export against a temporary Figma frame resized to `366 x <the height from Step 3>`, or - since no phone frame exists to transcribe - scale `border-table-d.svg` to the phone box. Prefer the scale: the brush texture is the same line and a phone frame does not exist to be faithful to.
 
 ```bash
 python - <<'PY'
@@ -1424,7 +1424,7 @@ print('wrote border-table-m.svg', H)
 PY
 ```
 
-Keeping the `viewBox` while changing `width`/`height` scales the artwork non-uniformly, which on a 366-wide box stretches the brush. If it reads badly at the seam, re-export from Figma at the real phone size instead — the plan permits either, the render decides.
+Keeping the `viewBox` while changing `width`/`height` scales the artwork non-uniformly, which on a 366-wide box stretches the brush. If it reads badly at the seam, re-export from Figma at the real phone size instead - the plan permits either, the render decides.
 
 - [ ] **Step 5: Run every check**
 
@@ -1442,7 +1442,7 @@ Append to `NOTES.md` under `## style.css`:
 ### The phone log table is DERIVED, not transcribed
 
 There is no v2 phone frame. Four 18px columns do not fit a 366 box, so each row
-reflows to two lines — member + stat, then activity + date — at 15px/20px, and the
+reflows to two lines - member + stat, then activity + date - at 15px/20px, and the
 header is dropped because a four-column header cannot honestly label a two-line
 row. `scope="col"` in the markup still serves assistive tech.
 
@@ -1471,7 +1471,7 @@ git commit -m "Reflow the log table for the phone breakpoint"
 
 **Interfaces:**
 - Consumes: everything.
-- Produces: nothing new — the completion gate.
+- Produces: nothing new - the completion gate.
 
 - [ ] **Step 1: Run the whole suite**
 
@@ -1525,7 +1525,7 @@ Append a new top-level section:
 ## tools/verify.py
 
 Renders each page in headless Chrome and asserts measured pixel facts against the
-Figma frames — the same sampling that settled the v2 design questions, kept
+Figma frames - the same sampling that settled the v2 design questions, kept
 runnable so a change that breaks the composition fails loudly.
 
 ```sh
@@ -1548,14 +1548,14 @@ are a manual pass in a real browser.
 ```markdown
 # bodyimprovementclub
 
-BIC! The club's site — [bodyimprovement.club](https://bodyimprovement.club/)
+BIC! The club's site - [bodyimprovement.club](https://bodyimprovement.club/)
 
 Static HTML/CSS with one small script, no build step. `index.html` (start),
 `log-of-gains.html`, `shop.html`, all sharing `style.css`.
 
-- `NOTES.md` — why the files look the way they do. Read before editing either.
-- `docs/superpowers/specs/` — designs
-- `python tools/verify.py` — render the pages and check them against the designs
+- `NOTES.md` - why the files look the way they do. Read before editing either.
+- `docs/superpowers/specs/` - designs
+- `python tools/verify.py` - render the pages and check them against the designs
 ```
 
 - [ ] **Step 7: Commit**

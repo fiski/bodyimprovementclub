@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BIC — Interactive Tee</title>
+<title>BIC - Interactive Tee</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Overpass+Mono:wght@400;600;700&display=swap" rel="stylesheet">
@@ -53,7 +53,7 @@
 <div id="bic-stage">
   <div id="viewwrap"><canvas id="tshirt-viewer"></canvas></div>
   <div id="panel">
-    <div class="ph"><span>BIC · CONTROLS</span><button id="tog" aria-label="collapse">–</button></div>
+    <div class="ph"><span>BIC · CONTROLS</span><button id="tog" aria-label="collapse">-</button></div>
     <div id="rows">
       <label>THICKNESS <span data-v="thick"></span></label>
       <input type="range" id="thick" min="0.4" max="3" step="0.05" value="1">
@@ -155,7 +155,7 @@ bind('detail',v=>{detail=v;clearTimeout(dt);dt=setTimeout(()=>{rebuild();center(
 $('ghost').onclick=e=>{ghostOn=!ghostOn;e.target.classList.toggle('on',ghostOn);rebuild();center();};
 $('spin').onclick=e=>{controls.autoRotate=!controls.autoRotate;e.target.classList.toggle('on',controls.autoRotate);};
 $('reset').onclick=()=>{const d={thick:1,speed:1.2,pulse:0,pulseRate:2,distort:0,distRate:1.5,detail:45};for(const k in d){$(k).value=d[k];$(k).dispatchEvent(new Event('input'));}};
-$('tog').onclick=()=>{const r=$('rows');r.hidden=!r.hidden;$('tog').textContent=r.hidden?'+':'–';};
+$('tog').onclick=()=>{const r=$('rows');r.hidden=!r.hidden;$('tog').textContent=r.hidden?'+':'-';};
 show();
 // Stacked layout: open sliders would take the shirt's room on load.
 if(matchMedia('(max-width:520px)').matches){$('rows').hidden=true;$('tog').textContent='+';}

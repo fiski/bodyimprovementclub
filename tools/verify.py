@@ -59,7 +59,7 @@ TAB_SAMPLE_INSET = 6      # inset from each cell edge when sampling its fill
 # Content box's top brush line (desktop). A hand-drawn brush stroke wobbles a
 # couple of px along its length rather than holding a fixed row, so checks for
 # it scan a short band and take the reddest row rather than sampling one fixed
-# 2px band — see check_shell.
+# 2px band - see check_shell.
 BOX_TOP = 286        # y of the content box's top edge
 BOX_LINE_SCAN = 3    # rows to scan; the brush line wobbles 1-2px along its length
 
@@ -145,7 +145,7 @@ def check_shell(r, im, page):
     # The box's top brush line runs continuously across all three tab cells.
     # A hand-drawn brush stroke wobbles a couple of px along its length rather
     # than holding a fixed row, so this scans a short band below BOX_TOP and
-    # takes the reddest row — but the scan must START at BOX_TOP and never
+    # takes the reddest row - but the scan must START at BOX_TOP and never
     # look above it: the active tab's red fill ends just above BOX_TOP, and
     # scanning into it would make this check pass on that fill instead of the
     # line, which is vacuous under exactly the cell where it matters most.
